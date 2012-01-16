@@ -6,7 +6,6 @@
 
 using namespace std;
 
-
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); 
 
 const char* AppName="HelloWorld";
