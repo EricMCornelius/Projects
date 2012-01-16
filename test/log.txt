@@ -1,2 +1,0 @@
-Creating window
-Main loop starting
