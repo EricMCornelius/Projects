@@ -3,14 +3,14 @@ LIB_PATHS =  \
 -LC:/MinGW32/lib \
 
 # The linker options.
-LIBS   = \
+LIBS = \
 -lopengl32 \
 
 # The pre-processor options used by the cpp (man cpp for more).
-CPPFLAGS  = -Wall -mwindows
+CPPFLAGS = -Wall -mwindows
 
 # The options used in linking as well as in any direct use of ld.
-LDFLAGS   =
+LDFLAGS =
 
 # The directories which should be added to the include path
 INCDIRS = \
@@ -21,7 +21,7 @@ INCDIRS = \
 
 # The executable file name.
 # If not specified, current directory name or `a.out' will be used.
-PROGRAM   = test.exe
+TARGET = test
 
 ## Implicit Section: change the following only when necessary.
 ##==========================================================================
@@ -36,10 +36,10 @@ HDREXTS = .h .hpp
 CPPFLAGS += -g -O2
 
 # The C++ program compiler.
-COMPILER    = g++
+COMPILER = g++
 
 # The C++ program linker.
-LINKER      = g++
+LINKER = g++
 
 # The command used to delete file.
 RM     = rm -f
@@ -50,9 +50,12 @@ INCLUDEDIR = include
 
 ## Stable Section: usually no need to be changed. But you can add more.
 ##==========================================================================
-ifeq ($(PROGRAM),)
-  PROGRAM = default.exe
-endif
+EXEC_SUFFIX = .exe
+SHARED_SUFFIX = .so
+STATIC_SUFFIX = .a
+LIB_PREFIX = lib
+TARGET = default
+
 SOURCES = $(wildcard $(addprefix $(SRCDIR)/*,$(SRCEXTS)))
 HEADERS = $(wildcard $(addprefix $(INCLUDEDIR)/*,$(HDREXTS)))
 SRCS    = $(filter-out %.c,$(SOURCES))
@@ -60,24 +63,24 @@ OBJS    = $(foreach s,$(SOURCES),$(addsuffix .o, $(BUILDDIR)/$(notdir $(basename
 DEPS    = $(OBJS:.o=.d)
 
 ## Define some useful variables.
-DEP_OPT = -MF"$@" -MD -MM -MT"$@" -MT"$(BUILDDIR)/$(basename $(notdir $<)).o" -c $<
-DEPEND      = $(COMPILER) $(INCDIRS) $(DEP_OPT)
-DEPEND.d    = $(subst -g ,,$(DEPEND))
 COMPILE = $(COMPILER) $(INCDIRS) $(CPPFLAGS) -c
 LINK    = $(LINKER) $(CPPFLAGS) $(LDFLAGS)
+SHAREDLINK = $(LINKER) $(CPPFLAGS) $(LDFLAGS) -shared
 
 .PHONY: all objs clean distclean help show
 
 # Delete the default suffixes
 .SUFFIXES:
 
-all: $(PROGRAM)
+all: $(TARGET)$(EXEC_SUFFIX)
 
 # Rules for creating dependency files (.d).
 #------------------------------------------
 
+deps:$(DEPS)
+
 $(BUILDDIR)/%.d:$(SRCDIR)/%.cpp
-	$(DEPEND.d)
+	$(COMPILER) $(INCDIRS) -MF$@ -MD -MM -MT$@ -MT$(BUILDDIR)/$(basename $(notdir $<)).o -c $<
 
 # Rules for generating object files (.o).
 #----------------------------------------
@@ -88,17 +91,23 @@ $(BUILDDIR)/%.o:$(SRCDIR)/%.cpp
 
 # Rules for generating the executable.
 #-------------------------------------
-$(PROGRAM):$(OBJS)
+$(TARGET)$(EXEC_SUFFIX):$(OBJS)
 	$(LINK) $(OBJS) $(LIB_PATHS) $(LIBS) -o $@
 	@echo Type ./$@ to execute the program.
 
-sinclude $(DEPS)
-
 clean:
-	$(RM) $(OBJS) $(PROGRAM)
+	$(RM) $(OBJS) $(TARGET)$(EXEC_SUFFIX)
 
 distclean: clean
 	$(RM) $(DEPS)
+	
+staticlib: $(OBJS)
+	$(STATICLINK) -o $(LIB_PREFIX)$(TARGET)$(STATIC_SUFFIX)
+	
+sharedlib: $(OBJS)
+	$(SHAREDLINK) -o $(LIB_PREFIX)$(TARGET)$(SHARED_SUFFIX)
+	
+sinclude $(DEPS)
 
 # Show help.
 help:
@@ -106,7 +115,6 @@ help:
 	@echo 'Usage: make [TARGET]'
 	@echo 'TARGETS:'
 	@echo '  all       (=make) compile and link.'
-	@echo '  NODEP=yes make without generating dependencies.'
 	@echo '  objs      compile only (no linking).'
 	@echo '  clean     clean objects and the executable file.'
 	@echo '  distclean clean objects, the executable and dependencies.'
@@ -117,8 +125,10 @@ help:
 
 # Show variables (for debug use only.)
 show:
-	@echo 'PROGRAM     :' $(PROGRAM)
-	@echo 'SRCDIRS     :' $(SRCDIRS)
+	@echo 'PROGRAM     :' $(TARGET)$(EXEC_SUFFIX)
+	@echo 'SHARED_LIB  :' $(LIB_PREFIX)$(TARGET)$(SHARED_SUFFIX)
+	@echo 'STATIC_LIB  :' $(LIB_PREFIX)$(TARGET)$(STATIC_SUFFIX)
+	@echo 'SRCDIR      :' $(SRCDIR)
 	@echo 'HEADERS     :' $(HEADERS)
 	@echo 'SOURCES     :' $(SOURCES)
 	@echo 'LIBS        :' $(LIBS)
@@ -126,7 +136,6 @@ show:
 	@echo 'SRCS        :' $(SRCS)
 	@echo 'OBJS        :' $(OBJS)
 	@echo 'DEPS        :' $(DEPS)
-	@echo 'DEPEND      :' $(DEPEND)
 	@echo 'COMPILE     :' $(COMPILE)
 	@echo 'LINK        :' $(LINK)
 

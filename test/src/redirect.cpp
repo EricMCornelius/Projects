@@ -7,7 +7,6 @@
 #include <iostream>
 #include <fstream>
 
-
 using namespace std;
 
 // maximum mumber of lines the output console should have
