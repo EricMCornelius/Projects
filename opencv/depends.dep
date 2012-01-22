@@ -1,0 +1,10 @@
+INCL_DEPENDS += \
+-IC:/Programming/opencv_bin/install/include \
+
+LIB_PATH_DEPENDS += \
+-LC:/Programming/opencv_bin/install/lib \
+
+LIB_DEPENDS += \
+-lopencv_highgui231 \
+-lopencv_core231 \
+-lopencv_imgproc231 \
