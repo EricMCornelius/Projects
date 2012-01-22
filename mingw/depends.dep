@@ -3,7 +3,7 @@ INCL_DEPENDS += \
 -IC:/MinGW32/lib/gcc/mingw32/4.6.1/include/c++/mingw32 \
 -IC:/MinGW32/include \
 
-LIB_PATHS_DEPENDS += \
+LIB_PATH_DEPENDS += \
 -LC:/MinGW32/lib/gcc/mingw32/4.6.1 \
 -LC:/MinGW32/lib \
 
