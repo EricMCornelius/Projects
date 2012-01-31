@@ -1,5 +1,5 @@
 # Library search paths
-DEFAULT_LIB_PATHS := -LC:/MinGW32/lib/gcc/mingw32/4.6.1 -LC:/MinGW32/lib
+DEFAULT_LIB_PATHS :=
 LIB_PATHS ?= $(DEFAULT_LIB_PATHS)
 
 # Library dependencies
@@ -12,7 +12,7 @@ SRCDIR     ?= src
 INCLUDEDIR ?= include
 
 # Include paths
-DEFAULT_INCDIRS := -IC:/MinGW32/lib/gcc/mingw32/4.6.1/include/c++ -IC:/MinGW32/lib/gcc/mingw32/4.6.1/include/c++/mingw32 -IC:/MinGW32/include
+DEFAULT_INCDIRS :=
 INCDIRS ?= $(DEFAULT_INCDIRS)
 INCDIRS += -Iinclude
 
