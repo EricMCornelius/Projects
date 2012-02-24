@@ -1,5 +1,5 @@
 # Library search paths
-DEFAULT_LIB_PATHS := -LC:/MinGW32/lib/gcc/mingw32/4.6.1 -LC:/MinGW32/lib
+DEFAULT_LIB_PATHS :=
 LIB_PATHS ?= $(DEFAULT_LIB_PATHS)
 
 # Library dependencies
@@ -12,7 +12,7 @@ SRCDIR     ?= src
 INCLUDEDIR ?= include
 
 # Include paths
-DEFAULT_INCDIRS := -IC:/MinGW32/lib/gcc/mingw32/4.6.1/include/c++ -IC:/MinGW32/lib/gcc/mingw32/4.6.1/include/c++/mingw32 -IC:/MinGW32/include
+DEFAULT_INCDIRS :=
 INCDIRS ?= $(DEFAULT_INCDIRS)
 INCDIRS += -Iinclude
 
@@ -23,7 +23,7 @@ SRCEXTS ?= .cpp
 HDREXTS ?= .h .hpp
 
 # Preprocessor/compiler options
-DEFAULT_CPPFLAGS := -Wall -mwindows -std=c++0x -g -O2
+DEFAULT_CPPFLAGS := -Wall -std=c++0x -g -O3 #-mwindows
 CPPFLAGS ?= $(DEFAULT_CPPFLAGS)
 
 # Linker options
@@ -62,6 +62,8 @@ INCDIRS += $(INCL_DEPENDS)
 LIBS += $(LIB_DEPENDS)
 LIB_PATHS += $(LIB_PATH_DEPENDS)
 
+PREFIXED_LIB_PATHS := $(foreach p,$(LIB_PATHS),-L$(p) -Wl,-rpath,$(p))
+
 ## Define some useful variables.
 COMPILE = $(COMPILER) $(INCDIRS) $(CPPFLAGS) -c
 LINK    = $(LINKER) $(CPPFLAGS) $(LDFLAGS)
@@ -82,7 +84,7 @@ all: $(TARGET)$(EXEC_SUFFIX)
 deps:$(DEPS)
 
 $(BUILDDIR)/%.d:$(SRCDIR)/%.cpp
-	$(COMPILER) $(INCDIRS) -MF$@ -MD -MM -MT$@ -MT$(BUILDDIR)/$(basename $(notdir $<)).o -c $<
+	$(COMPILER) $(INCDIRS) $(CPPFLAGS) -MF$@ -MD -MM -MT$@ -MT$(BUILDDIR)/$(basename $(notdir $<)).o -c $<
 
 # Rules for generating object files (.o).
 #----------------------------------------
@@ -94,26 +96,30 @@ $(BUILDDIR)/%.o:$(SRCDIR)/%.cpp
 # Rules for generating the executable.
 #-------------------------------------
 $(TARGET)$(EXEC_SUFFIX):$(OBJS)
-	$(LINK) $(OBJS) $(LIB_PATHS) $(LIBS) -o $@
+	$(LINK) $(OBJS) $(PREFIXED_LIB_PATHS) $(LIBS) $(LIB_DEPENDS) -o $@
 	@echo Type ./$@ to execute the program.
 
 clean:
 	$(RM) $(OBJS) $(TARGET)$(EXEC_SUFFIX) $(LIB_PREFIX)$(TARGET)$(STATIC_SUFFIX) $(LIB_PREFIX)$(TARGET)$(SHARED_SUFFIX)
 
+FORCE:
+	$(RM) depends.dep
+	
 distclean: clean
-	$(RM) $(DEPS) depends.dep
+	$(RM) $(DEPS)
 
 staticlib: $(OBJS) $(DEPENDENCY_FILE)
 	$(STATICLINK) $(LIB_PREFIX)$(TARGET)$(STATIC_SUFFIX) $(OBJS)
+	@echo LIB_DEPENDS += $(LIBS) $(CURDIR)/$(LIB_PREFIX)$(TARGET)$(STATIC_SUFFIX) >> depends.dep
 	
 sharedlib: $(OBJS) $(DEPENDENCY_FILE)
 	$(SHAREDLINK) -o $(LIB_PREFIX)$(TARGET)$(SHARED_SUFFIX) $(OBJS)
-	
+	@echo LIB_DEPENDS += $(LIBS) $(CURDIR)/$(LIB_PREFIX)$(TARGET)$(SHARED_SUFFIX) >> depends.dep
+
 $(DEPENDENCY_FILE):
 	@echo $(PACKAGE_INCLUDES) > depends.dep
 	@echo INCL_DEPENDS += -I$(CURDIR)/$(INCLUDEDIR) >> depends.dep
 	@echo LIB_PATH_DEPENDS += >> depends.dep
-	@echo LIB_DEPENDS += $(LIBS) $(CURDIR)/$(LIB_PREFIX)$(TARGET)$(STATIC_SUFFIX) >> depends.dep
 	
 sinclude $(DEPS)
 

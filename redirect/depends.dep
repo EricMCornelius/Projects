@@ -1,4 +1,4 @@
-sinclude /home/ecorneli/home/Programming/Projects/mingw/depends.dep
-INCL_DEPENDS += -I/home/users/ecorneli/Programming/Projects/redirect/include
-LIB_PATH_DEPENDS +=
-LIB_DEPENDS += /home/users/ecorneli/Programming/Projects/redirect/libredirect.a
+sinclude C:/Projects/mingw/depends.dep 
+INCL_DEPENDS += -IC:/Projects/redirect/include 
+LIB_PATH_DEPENDS += 
+LIB_DEPENDS +=   C:/Projects/redirect/libredirect.a 

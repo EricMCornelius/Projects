@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
   std::vector<boost::thread> threadVec;
   unsigned int threads = 3;
   for (unsigned int i = 0; i < threads; ++i)
-	threadVec.emplace_back(helloWorld, 50000);
+	threadVec.emplace_back(helloWorld, 100000);
 	
   for (auto& t : threadVec)
 	t.join();

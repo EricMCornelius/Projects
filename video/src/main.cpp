@@ -201,8 +201,9 @@ void modChannel2(Image& img, unsigned int channel, unsigned int colors) {
 }
 
 void vidCap(const std::string& file) {
-	VideoCapture cap(file.c_str()); // open the default camera
-    if(!cap.isOpened())  // check if we succeeded
+	//VideoCapture cap(file.c_str()); // open the default camera
+    VideoCapture cap(0);
+	if(!cap.isOpened())  // check if we succeeded
         return;
 
     Mat edges;
