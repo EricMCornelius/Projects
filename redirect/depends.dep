@@ -1,4 +1,4 @@
-sinclude C:/Projects/mingw/depends.dep
-INCL_DEPENDS += -IC:/Projects/redirect/include
-LIB_PATH_DEPENDS +=
-LIB_DEPENDS += C:/Projects/redirect/libredirect.a
+sinclude C:\Projects/mingw/depends.dep 
+INCL_DEPENDS += -IC:/Projects/redirect/include 
+LIB_PATH_DEPENDS += 
+LIB_DEPENDS +=   C:/Projects/redirect/libredirect.a 

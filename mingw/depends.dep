@@ -1,10 +1,10 @@
 INCL_DEPENDS += \
--IC:/MinGW32/lib/gcc/mingw32/4.6.1/include/c++ \
--IC:/MinGW32/lib/gcc/mingw32/4.6.1/include/c++/mingw32 \
--IC:/MinGW32/include \
+-IC:/MinGW64/lib/gcc/mingw64/4.6.1/include/c++ \
+-IC:/MinGW64/lib/gcc/mingw64/4.6.1/include/c++/mingw32 \
+-IC:/MinGW64/include \
 
 LIB_PATH_DEPENDS += \
--LC:/MinGW32/lib/gcc/mingw32/4.6.1 \
--LC:/MinGW32/lib \
+-LC:/MinGW64/lib/gcc/mingw64/4.6.1 \
+-LC:/MinGW64/lib \
 
 LIB_DEPENDS +=
