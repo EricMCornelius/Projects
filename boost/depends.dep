@@ -1,10 +1,8 @@
 INCL_DEPENDS += \
--IC:\Programming\boost_1_48_0 \
+-I/home/corneliu/Programming/Libraries/boost_1_48_0
 
 LIB_PATH_DEPENDS += \
--LC:\Programming\boost_1_48_0\stage\lib \
-
-PLATFORM := -mgw46-mt-1_48
+-L/home/corneliu/Programming/Libraries/boost_1_48_0/stage/lib
 
 LIB_DEPENDS += \
 -lboost_thread$(PLATFORM) \

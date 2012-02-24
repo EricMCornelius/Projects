@@ -1,5 +1,9 @@
 #include <redirect.hpp>
 
+#ifndef __WIN32__
+void RedirectIOToConsole() { }
+#else
+
 #include <windows.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -56,5 +60,6 @@ void RedirectIOToConsole()
 	// point to console as well
 	ios::sync_with_stdio();
 }
+#endif
 
 //End of File

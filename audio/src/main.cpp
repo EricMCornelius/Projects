@@ -1,10 +1,11 @@
-#include <al.h>
-#include <alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <redirect.hpp>
-#include <windows.h>
+//#include <windows.h>
 #include <sstream>
 #include <cmath>
 
@@ -95,13 +96,14 @@ void playAudio(const std::string& filename) {
 	std::vector<std::string> devices;
 	enumeratePlayback(devices);
 	for (auto device : devices)
-		std::cout << device << std::endl;
+	  std::cout << device << std::endl;
 	
 	ALCdevice *device = alcOpenDevice(devices[0].c_str());
 	if (alGetError() != AL_NO_ERROR) {
 		cout << "Error" << endl;
-        return;
-    }
+		return;
+	}
+
 	ALCcontext *context = alcCreateContext(device, NULL);
 	if (alGetError() != AL_NO_ERROR) {
 		cout << "Error" << endl;

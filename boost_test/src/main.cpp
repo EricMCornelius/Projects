@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include <redirect.hpp>
+//#include <redirect.hpp>
 
 boost::mutex lock;
 std::vector<unsigned int> output;
@@ -16,7 +16,7 @@ void helloWorld(unsigned int iterations) {
 }
 
 int main(int argc, char* argv[]) {
-  RedirectIOToConsole();
+  //RedirectIOToConsole();
   std::vector<boost::thread> threadVec;
   unsigned int threads = 3;
   for (unsigned int i = 0; i < threads; ++i)
@@ -32,6 +32,6 @@ int main(int argc, char* argv[]) {
 	last = i;
   }
 	
-  int x;
-  std::cin >> x;
+  //int x;
+  //std::cin >> x;
 }
