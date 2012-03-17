@@ -1,4 +1,0 @@
-TARGET = redirect
-
-PACKAGE_DEPENDENCIES += mingw
-include $(PROJECT_ROOT_DIR)/templates/common.mk

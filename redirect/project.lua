@@ -1,12 +1,13 @@
 -- A solution contains projects, and defines the available configurations
-solution "async_test"
+solution "redirect"
    configurations { "Debug", "Release" }
  
    -- A project defines one build target
-   project "async_test"
-      kind "ConsoleApp"
+   project "redirect"
+      kind "StaticLib"
       language "C++"
       files { "src/*.cpp" }
+      includedirs { "include" }
       buildoptions { "-std=c++0x" }
  
       configuration "Debug"

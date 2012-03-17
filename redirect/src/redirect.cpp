@@ -19,7 +19,7 @@ static const WORD MAX_CONSOLE_LINES = 500;
 void RedirectIOToConsole()
 {
 	int hConHandle;
-	long lStdHandle;
+	HANDLE lStdHandle;
 	CONSOLE_SCREEN_BUFFER_INFO coninfo;
 	FILE *fp;
 
@@ -33,24 +33,24 @@ void RedirectIOToConsole()
 	SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
 
 	// redirect unbuffered STDOUT to the console
-	lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
-	hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+	lStdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	hConHandle = _open_osfhandle(reinterpret_cast<intptr_t>(lStdHandle), _O_TEXT);
 
 	fp = _wfdopen( hConHandle, L"w" );
 	*stdout = *fp;
 	setvbuf( stdout, NULL, _IONBF, 0 );
 
 	// redirect unbuffered STDIN to the console
-	lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
-	hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+	lStdHandle = GetStdHandle(STD_INPUT_HANDLE);
+	hConHandle = _open_osfhandle(reinterpret_cast<intptr_t>(lStdHandle), _O_TEXT);
 
 	fp = _wfdopen( hConHandle, L"r" );
 	*stdin = *fp;
 	setvbuf( stdin, NULL, _IONBF, 0 );
 
 	// redirect unbuffered STDERR to the console
-	lStdHandle = (long)GetStdHandle(STD_ERROR_HANDLE);
-	hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+	lStdHandle = GetStdHandle(STD_ERROR_HANDLE);
+	hConHandle = _open_osfhandle(reinterpret_cast<intptr_t>(lStdHandle), _O_TEXT);
 
 	fp = _wfdopen( hConHandle, L"w" );
 	*stderr = *fp;

@@ -4,5 +4,7 @@
 *.so
 *.a
 *.d
+*.make
+Makefile
 
 build/
