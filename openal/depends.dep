@@ -1,9 +1,0 @@
-INCL_DEPENDS += \
-#-IC:\Programming\OpenAL\include \
-
-LIB_PATH_DEPENDS += \
-#-LC:\Programming\OpenAL\libs\Win64 \
-
-LIB_DEPENDS += \
--lopenal
-#"C:\Programming\OpenAL\libs\Win32\OpenAL32.lib" \
