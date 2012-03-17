@@ -1,37 +1,25 @@
-#include <boost/thread.hpp>
-
 #include <iostream>
 #include <vector>
+#include <string>
+#include <thread>
+#include <memory>
+#include <mutex>
+#include <future>
 
-//#include <redirect.hpp>
+std::mutex lock;
 
-boost::mutex lock;
-std::vector<unsigned int> output;
-
-void helloWorld(unsigned int iterations) {
-  for (unsigned int count = 0; count < iterations; ++count) {
-    boost::lock_guard<boost::mutex> guard(lock);
-    output.push_back(count);
-  }
+void print(const std::string& msg) {
+  std::lock_guard<std::mutex> guard(lock);
+  std::cout << msg << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  //RedirectIOToConsole();
-  std::vector<boost::thread> threadVec;
-  unsigned int threads = 3;
-  for (unsigned int i = 0; i < threads; ++i)
-	threadVec.emplace_back(helloWorld, 100000);
-	
-  for (auto& t : threadVec)
-	t.join();
-	
-  unsigned int last = 0;
-  for (auto i : output) {
-    if (last > i)
-	  std::cout << last << " > " << i << std::endl;
-	last = i;
-  }
-	
-  //int x;
-  //std::cin >> x;
+  std::vector<std::string> args(argv, argc + argv);
+  typedef std::future<void> FutureType;
+  std::vector<FutureType> futures;
+  for (auto& arg : args)
+    futures.emplace_back(std::async(std::launch::async, print, arg));
+    
+  for (auto& future : futures)
+    future.wait();
 }
