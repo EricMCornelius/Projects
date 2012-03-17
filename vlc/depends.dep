@@ -1,8 +1,0 @@
-INCL_DEPENDS += \
--IC:/Programming/vlc-1.1.11/sdk/include \
-
-LIB_PATH_DEPENDS += \
--LC:\Programming\vlc-1.1.11\sdk\lib \
-
-LIB_DEPENDS += \
--lvlc \
