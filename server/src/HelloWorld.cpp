@@ -37,18 +37,18 @@ int main() {
   boost::filesystem3::directory_iterator end;
   for (; itr != end; ++itr)
     std::cout << (*itr).path() << std::endl;
-
+  */
+    
   boost::asio::io_service loop;
   Server server(loop);
   server.listen(8998);
   loop.run();
-  */
 
   //std::cout << __builtin_ffs(val) << std::endl;
   //std::cout << __builtin_ctz(val) << std::endl;
 
-  for (size_t val = 0; val < 65535; ++val)
-    test(val);
+  //for (size_t val = 0; val < 65535; ++val)
+  //  test(val);
 
 	return 0;
 }
