@@ -1,15 +1,16 @@
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <AL/alext.h>
+//#include <AL/alext.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <redirect.hpp>
 //#include <windows.h>
 #include <sstream>
 #include <cmath>
 
 #include <list>
+#include <thread>
+#include <chrono>
 
 using namespace std;
 
@@ -71,7 +72,7 @@ struct AudioBuffer {
 class AudioCapture {
 public:
 	AudioCapture(const std::string& deviceName) 
-		: device(0), bufferSize(1024), format(AL_FORMAT_MONO16) 
+		: device(0), bufferSize(4096), sleepDuration(50), format(AL_FORMAT_MONO16) 
 	{
 		std::cout << deviceName << std::endl;
 		device = alcCaptureOpenDevice(deviceName.c_str(), SRATE, format, bufferSize);
@@ -102,6 +103,7 @@ public:
 			output.write((char*) buffer.data(), 2 * sample);
 			length += sample;
 			output.flush();
+      std::this_thread::sleep_for(std::chrono::milliseconds(sleepDuration));
 		}
 		
 		output.close();
@@ -113,6 +115,7 @@ private:
 	ALCdevice *device;
 	
 	const unsigned int bufferSize;
+  const unsigned int sleepDuration;
 	unsigned int format;
 };
 
@@ -246,7 +249,6 @@ void playAudio(const std::string& filename) {
 }
 
 int main(int argc, char *argv[]) {
-	RedirectIOToConsole();
 	//std::string output = "C:/Projects/audio/pitch.txt";
 	std::string output = "C:/Projects/audio/output.raw";
 	//generateWaveform(output);
@@ -254,7 +256,7 @@ int main(int argc, char *argv[]) {
 	std::cout << "Play 1" << std::endl;
 	playAudio(output);
 	std::cout << "Done" << std::endl;
-	Sleep(1000);
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	std::cout << "Play 2" << std::endl;
 	playAudio(output);
 	std::cout << "Done" << std::endl;
