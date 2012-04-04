@@ -28,7 +28,7 @@ public:
 
   void push(Element&& elem) {
     std::unique_lock<std::mutex> lock(_lock);
-    _overflow.wait(lock, [&]{ return this->mod(_end + 1) != this->mod(_start); });
+    _overflow.wait(lock, [&]{ return _start + Size != _end; });
 
     _elements[mod(_end)] = std::move(elem);
     ++_end;
