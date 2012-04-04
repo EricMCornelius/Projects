@@ -1,4 +1,0 @@
-TARGET = video
-
-PACKAGE_DEPENDENCIES += redirect opencv
-include $(PROJECT_ROOT_DIR)/templates/common.mk
