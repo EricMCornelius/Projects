@@ -9,7 +9,8 @@ solution "server"
       files { "src/*.cpp" }
       includedirs { "include" }
       libdirs { }
-      links { "boost_system", "ws2_32", "mswsock" }
+      links { "boost_system" }
+      --"ws2_32", "mswsock" }
       buildoptions { "-std=c++0x" }
  
       configuration "Debug"
