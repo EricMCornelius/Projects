@@ -7,9 +7,9 @@ solution "server"
       kind "ConsoleApp"
       language "C++"
       files { "src/*.cpp" }
-      includedirs { "include", "C:/Programming/boost_1_49_0" }
-      libdirs { "C:/Programming/boost_1_49_0/stage/lib" }
-      links { "boost_system-mgw47-mt-1_49", "ws2_32", "mswsock" }
+      includedirs { "include" }
+      libdirs { }
+      links { "boost_system", "ws2_32", "mswsock" }
       buildoptions { "-std=c++0x" }
  
       configuration "Debug"
