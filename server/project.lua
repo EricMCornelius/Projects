@@ -9,7 +9,7 @@ solution "server"
       files { "src/*.cpp" }
       includedirs { "include" }
       libdirs { }
-      links { "boost_system" }
+      links { "boost_system", "pthread" }
       --"ws2_32", "mswsock" }
       buildoptions { "-std=c++0x", "-pthread" }
  
