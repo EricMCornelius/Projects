@@ -11,7 +11,7 @@ solution "server"
       libdirs { }
       links { "boost_system", "pthread" }
       --"ws2_32", "mswsock" }
-      buildoptions { "-std=c++0x", "-pthread" }
+      buildoptions { "-std=c++0x" }
  
       configuration "Debug"
          defines { "DEBUG" }
@@ -19,4 +19,4 @@ solution "server"
  
       configuration "Release"
          defines { "NDEBUG" }
-         flags { "Optimize" }    
+         flags { "Optimize" } 
