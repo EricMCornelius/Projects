@@ -1,1 +1,4 @@
-console.log("Hello World")
+Project({
+  name: 'a',
+  deps: ['b', 'c']
+});
