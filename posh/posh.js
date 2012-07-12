@@ -6,7 +6,9 @@ var util = require('util');
 var proc = require('child_process');
 var async = require('async');
 
-var DEBUG = true;
+fs.mkdirp = require('mkdirp');
+
+var DEBUG = false;
 
 dump = function(arg) {
   if (!DEBUG)
@@ -21,6 +23,8 @@ dump = function(arg) {
 }
 
 fs.copy = function (src, dst, cb) {
+  console.log('Copying ' + src + ' -> ' + dst); 
+
   function copy(err) {
     var is, os;
 
@@ -45,25 +49,18 @@ function exists(obj) {
 }
 
 function initialize(obj, vars) {
-  if (!exists(vars))
-    vars = {};
-
-  for (var prop in obj.defaults)
-    if (obj.defaults.hasOwnProperty(prop))
-      obj[prop] = obj.defaults[prop];
-
   for (var prop in vars) {
     if (vars.hasOwnProperty(prop))
       obj[prop] = vars[prop];
   }
 }
 
-function launch(args, cb) {
+launch = function(args, cb) {
   dump(args);
 
-  var invoke = proc.spawn(args.cmd, args.args);
+  var invoke = proc.spawn(args.cmd, args.args, args.opts);
   invoke.stdout.on('data', function(data) {
-    dump(data);
+    console.log(data + '');
   });
 
   invoke.stderr.on('data', function(data) {
@@ -78,27 +75,44 @@ function launch(args, cb) {
   });
 };
 
+function Barrier(count, cb) {
+  this.count = count;
+  this.callback = cb;
+};
+
+Barrier.prototype.signal = function() {
+  --this.count;
+  if (this.count === 0)
+    this.callback();
+};
+
+function Defer(func) {
+  return function(cb) { func(cb); };
+};
+
 function BuildSetType(vars) {
   var self = this;
+
+  self.name = '';
+  self.projects = [];
+  self.dep_graph = {
+    nodes: [],
+    parents: {},
+    children: {},
+  };
+  self.topological_order = [];
+  self.name_to_project_map = {};
+
   initialize(self, vars);
 
   self.topological_order = [];
   self.name_to_project_map =  {};
   self.add_project = self.add_project.bind(self);
   self.lookup_project = self.lookup_project.bind(self);
+  self.generate = self.generate.bind(self);
   self.topological_sort = self.topological_sort.bind(self);
-};
-
-BuildSetType.prototype.defaults = {
-  name: "",
-  projects: [],
-  dep_graph: {
-    nodes: [],
-    parents: {},
-    children: {}
-  },
-  topological_order: [],
-  name_to_project_map: {}
+  self.generate_transitive_closures = self.generate_transitive_closures.bind(self);
+  self.generate_dependency_graph = self.generate_dependency_graph.bind(self);
 };
 
 BuildSetType.prototype.add_project = function(project) {
@@ -174,14 +188,14 @@ BuildSetType.prototype.generate_dependency_graph = function() {
   g.children[root_name] = [];
   g.parents[root_name] = [];
 
-  this.projects.map(function(project) {
+  this.projects.forEach(function(project) {
     project.id = ++count;
     g.nodes.push(project.name);
     g.children[project.name] = [];
     g.parents[project.name] = [];
   });
 
-  this.projects.map(function(project) {
+  this.projects.forEach(function(project) {
     g.parents[root_name].push(project.name);	
     project.deps.map(function(dep) {
       if (-1 === g.nodes.indexOf(dep))
@@ -191,28 +205,38 @@ BuildSetType.prototype.generate_dependency_graph = function() {
       g.parents[dep].push(project.name);
     });
   });
-
-  this.topological_sort();
 };
 
-BuildSetType.prototype.generate_transitive_closure = function(project) {
-  var projects = project.deps.splice(0);
-  var closure = {};
+BuildSetType.prototype.generate_transitive_closures = function() {
+  var self = this;
+  self.projects.forEach(function(project) {
+    var projects = project.deps.slice(0);
+    var closure = {};
 
-  while (projects.length > 0) {
-    var p = this.lookup_project(projects.shift());
-    closure[p.name] = p;
-    projects = projects.concat(p.deps);
-  }
+    while (projects.length > 0) {
+      var p = self.lookup_project(projects.shift());
+      closure[p.name] = p;
+      projects = projects.concat(p.deps);
+    }
 
-  var ordered = [];
-  this.topological_order.forEach(function(name) {
-    if (name in closure)
-      ordered.push(name);
+    var ordered = [];
+    self.topological_order.forEach(function(name) {
+      if (name in closure)
+        ordered.push(name);
+    });
+
+    project.dependency_closure = ordered;    
   });
-
-  return ordered.map(this.lookup_project);
 };
+
+BuildSetType.prototype.generate = function() {  
+  this.generate_dependency_graph();
+  this.topological_sort();
+  this.generate_transitive_closures();
+
+  dump(GlobalBuildSet.dep_graph);
+  dump(GlobalBuildSet.topological_order);
+}
 
 BuildSet = function(vars) {
   return new BuildSetType(vars);
@@ -222,6 +246,21 @@ GlobalBuildSet = BuildSet({name: "GlobalBuildSet"});
 
 ProjectType = function(vars) {
   var self = this;
+
+  self.name = '';
+  self.type = '';
+  self.target = '';
+  self.deps = [];
+  self.dependency_closure = [];
+  self.sources = [];
+  self.source_root = '';
+  self.headers = [];
+  self.header_root = '';
+  self.libs = []; 
+  self.resources = [];
+  self.options = [];
+  self.artifacts = [];
+
   initialize(self, vars);
 
   self.__prebuild = self.__prebuild.bind(self);
@@ -230,15 +269,26 @@ ProjectType = function(vars) {
   self.__publish = self.__publish.bind(self);
   self.__postbuild = self.__postbuild.bind(self);
 
-  self.build_set = GlobalBuildSet;
   self.toolchain = null;
-  self.build_set.add_project(self);
+  GlobalBuildSet.add_project(self);
 
   if (!exists(vars.root))
     self.root = path.dirname(current_file);
 
-  if (!exists(vars.output_root))
-    self.output_root = self.root;
+  if (exists(vars.header_root))
+    self.header_root = path.resolve(self.root, self.header_root);
+  else
+    self.header_root = self.root;
+
+  if (exists(vars.source_root))
+    self.source_root = path.resolve(self.root, self.source_root);
+  else
+    self.source_root = self.root;
+
+  if (exists(vars.installdir))
+    self.installdir = path.resolve(self.root, vars.installdir);
+  else
+    self.installdir = path.join(self.root, 'install');
 
   if (!exists(vars.toolchain))
     self.toolchain = current_toolchain;
@@ -247,7 +297,7 @@ ProjectType = function(vars) {
     self.target = self.name;
 
   var default_dirs = [
-    ['outputdir', 'build'],
+    ['builddir', 'build'],
     ['bindir', 'bin'],
     ['libdir', 'lib'],
     ['includedir', 'include'],
@@ -258,21 +308,13 @@ ProjectType = function(vars) {
     var field = info[0];
     var def = info[1];
     if (exists(vars[field]))
-      self[field] = path.join(self.output_root, self[field]);
+      self[field] = path.resolve(self.installdir, self[field]);
     else
-      self[field] = path.join(self.output_root, def);
+      self[field] = path.join(self.installdir, def);
   });
 };
 
-ProjectType.prototype.defaults = {
-  name: "",
-  type: "",
-  target: "",
-  deps: [],
-  files: [],
-  headers: [],
-  resources: [],
-  options: [],
+ProjectType.prototype = {
   prebuild: function() { },
   compile: function() { },
   link: function() { },
@@ -290,16 +332,14 @@ Project = function(vars) {
 };
 
 BuildSettingsType = function(vars) {
-  initialize(this, vars);
-};
+  this.include_paths = [];
+  this.lib_paths = [];
+  this.libs = [];
+  this.compiler_flags = [];
+  this.linker_flags = [];
+  this.defines = [];
 
-BuildSettingsType.prototype.defaults = {
-  include_paths: [],
-  lib_paths: [],
-  libs: [],
-  compiler_flags: [],
-  linker_flags: [],
-  defines: []  
+  initialize(this, vars);
 };
 
 BuildSettings = function(vars) {
@@ -308,72 +348,76 @@ BuildSettings = function(vars) {
 
 GccToolchainType = function(args) {
   var self = this;  
+
+  self.name = "g++";
+  self.compiler = "g++";
+  self.linker = "g++";
+  self.settings = BuildSettings({libs: ['rt']});  
+
   initialize(self, args);
 
-  this.compile = this.compile.bind(self);
-  this.compile_env = this.compile_env.bind(self);
+  self.compile = self.compile.bind(self);
+  self.publish = self.publish.bind(self);
+  self.link = self.link.bind(self);
+  self.compile_env = self.compile_env.bind(self);
+  self.link_env = self.link_env.bind(self);
 };
 
-GccToolchainType.prototype.defaults = {
-  name: "g++",
-  compiler: "g++",
-  linker: "g++",
-  settings: BuildSettings({include_paths: ['include']}),
-
-  generators: {
-    includes: function(args) {
-      return args.map(function(path) {
-        return '-I' + path;
-      });
-    },
-
-    libs: function(args) {
-      return args.map(function(path) {
-        return '-L' + path;
-      });
-    },
-
-    rpaths: function(args) {
-      return args.map(function(path) {
-        return '-Wl,-rpath,' + path;
-      });
-    },
-
-    links: function(args) {
-      return args.map(function(lib) {
-        return '-l' + lib;
-      });
-    },
-
-    defines: function(args) {
-      return args.map(function(define) {
-        return '-D' + define;
-      });
-    },
-
-    compiler_flags: function(args) {
-      return args;
-    },
-
-    linker_flags: function(args) {
-      return args;
-    },
-
-    collate_settings: function(obj1, obj2) {
-      var fields = ['include_paths', 'lib_paths', 'libs', 'compiler_flags', 'linker_flags', 'defines'];
-      return fields.map(function(field) {
-        return obj1[field].concat(obj2[field]);
-      });
-    },
+GccToolchainType.prototype.generators = {
+  includes: function(args) {
+    return args.map(function(path) {
+      return '-I' + path;
+    });
   },
+
+  libs: function(args) {
+    return args.map(function(path) {
+      return '-L' + path;
+    });
+  },
+
+  rpaths: function(args) {
+    return args.map(function(path) {
+      return '-Wl,-rpath,' + path;
+    });
+  },
+
+  links: function(args) {
+    return args.map(function(lib) {
+      return '-l' + lib;
+    });
+  },
+
+  defines: function(args) {
+    return args.map(function(define) {
+      return '-D' + define;
+    });
+  },
+
+  compiler_flags: function(args) {
+    return args;
+  },
+
+  linker_flags: function(args) {
+    return args;
+  }
+};
+
+GccToolchainType.prototype.collate_settings = function(obj1, obj2) {
+  var fields = ['include_paths', 'lib_paths', 'libs', 'compiler_flags', 'linker_flags', 'defines'];
+  
+  var result = {};
+  fields.forEach(function(field) {
+    result[field] = obj1[field].concat(obj2[field]);
+  });
+  return result;
 };
 
 GccToolchainType.prototype.compile_env = function(project) {
-  //var settings = BuildSettings(project);
-  var settings = this.collate_settings(project, this.settings);
+  var settings = this.collate_settings(BuildSettings(project), this.settings);
 
-  var deps = GlobalBuildSet.generate_transitive_closure(project);
-  deps.forEach(function(dep) {
+  project.dependency_closure.forEach(function(dep_name) {
+    var dep = GlobalBuildSet.lookup_project(dep_name);
     settings.include_paths.push(dep.includedir);
   });
  
@@ -390,12 +434,16 @@ GccToolchainType.prototype.compile_env = function(project) {
 };
   
 GccToolchainType.prototype.link_env = function(project) {
-  //var settings = BuildSettings(project);
-  
-  var deps = GlobalBuildSet.generate_transitive_closure(project);
-  deps.forEach(function(dep) {
+  var settings = this.collate_settings(BuildSettings(project), this.settings);
+
+  project.dependency_closure.forEach(function(dep_name) {
+    var dep = GlobalBuildSet.lookup_project(dep_name);
     settings.lib_paths.push(dep.libdir);
-    settings.libs.unshift(dep.target);
+
+    if (dep.type === 'SharedLib' || dep.type === 'StaticLib')
+      settings.libs.push(dep.target);
+    else
+      dep.libs.forEach(function(lib) { settings.libs.push(lib); });
   });
   
   var flags = this.generators.linker_flags(settings.linker_flags);
@@ -416,73 +464,128 @@ GccToolchainType.prototype.publish_env = function(project) {
 };
 
 GccToolchainType.prototype.compile = function(project, cb) {
+  if (project.type === 'Dependency')
+    return cb(null);
+
   console.log('Compiling ' + project.name + '...');
   var env = this.compile_env(project);
   
   try {
-    fs.mkdirSync(project.outputdir);
+    fs.mkdirp.sync(project.installdir);
   }
   catch(e) { } 
 
   var files = [];
-  project.files.map(function(file) {
-    var file_path = path.join(project.root, file);
-    files = files.concat(glob.sync(file_path, null));
+  project.sources.map(function(source) {
+    var source_path = path.join(project.source_root, source);
+    files = files.concat(glob.sync(source_path, null));
   });
 
-  var commands = files.map(function(file) {
+  var artifacts = files.map(function(file) {
     var base = path.basename(file, path.extname(file));
-    output = path.join(project.outputdir, base + '.o');
-    args = env.args.concat(['-c', file, '-o', output]);
+    output = path.join(project.builddir, base + '.o');
+    
     return {
-      cmd: env.compiler,
-      args: args,
+      source: file,
+      output: output
     };
   });
 
-  async.forEach(
-    commands,
-    function(cmd, cb) { launch(cmd, cb); },
-    function(err) { cb(null); }
-  );
+  var source_stat = function(cb) {
+    var sources = artifacts.map(function(artifact){ return artifact.source; });
+    async.map(sources, fs.stat, function(err, results) {
+      for (var i = 0; i < results.length; ++i)
+        artifacts[i].source_timestamp = results[i].mtime; 
+      cb();
+    });
+  };
+
+  var output_stat = function(cb) {
+    var outputs = artifacts.map(function(artifact){ return artifact.output; });
+    async.map(outputs, fs.stat, function(err, results) {
+      for (var i = 0; i < results.length; ++i)
+        artifacts[i].output_timestamp = results[i].mtime;
+      cb();
+    });
+  };
+
+  var compilations = function(cb) {
+    project.artifacts = project.artifacts.concat(artifacts);
+
+    artifacts = artifacts.filter(function(artifact) {
+      return (artifact.source_timestamp > artifact.output_timestamp);
+    });
+
+    var commands = artifacts.map(function(artifact) {
+      args = env.args.concat(['-c', artifact.source, '-o', artifact.output]);
+ 
+      return {
+        cmd: env.compiler,
+        args: args,
+        opts: { cwd: project.root }
+      };
+    });
+
+    console.log("COMMANDS!");
+    dump(commands);
+
+    async.forEach(
+      commands,
+      function(cmd, cb) { launch(cmd, cb); },
+      function(err) { cb(err); }
+    );
+  };
+
+  var stat = function(cb) {
+    async.parallel([source_stat, output_stat], function(err, results) { cb(); });
+  };
+
+  async.series([stat, compilations], function(err, results) { cb(); });
 };
 
 GccToolchainType.prototype.publish = function(project, cb) {
+  if (project.type === 'Dependency')
+    return cb(null);
+
   console.log('Publishing ' + project.name + '...');
   var env = this.publish_env(project);
     
   try {
-    fs.mkdirSync(project.includedir);
+    fs.mkdirp.sync(project.builddir);
+    fs.mkdirp.sync(project.includedir);
   }
   catch(e) { }
 
   var files = [];
-  project.headers.map(function(file) {
-    files = files.concat(glob.sync(file, {cwd: project.root}));
+  project.headers.forEach(function(file) {
+    files = files.concat(glob.sync(file, {cwd: path.join(project.header_root)}));
   });
 
   async.forEach(
-    files, 
-    function(file, cb) { fs.copy(path.join(project.root, file), path.join(project.includedir, file), cb); },
+    files,
+    function(file, cb) { fs.copy(path.join(project.header_root, file), path.join(project.includedir, file), cb); },
     function(err) { cb(null); }
   );
 };
 
 GccToolchainType.prototype.link = function(project, cb) {
+  if (project.type === 'Dependency')
+    return cb(null);
+
   console.log('Linking ' + project.name + '...');
   var env = this.link_env(project);
 
   try {
-    fs.mkdirSync(project.libdir);
+    fs.mkdirp.sync(project.libdir);
   }
   catch(e) { } 
 
   try {
-    fs.mkdirSync(project.bindir);
+    fs.mkdirp.sync(project.bindir);
   }
   catch(e) { } 
     
-  var obj_glob = path.join(project.outputdir, '*.o');
+  var obj_glob = path.join(project.builddir, '*.o');
   var files = glob.sync(obj_glob, null);
 
   args = [].concat(env.args);
@@ -508,11 +611,17 @@ GccToolchainType.prototype.link = function(project, cb) {
     args = args.concat('-o', output);
 
   args = args.concat(files);
-  
+
   var command = {
     cmd: env.linker,
     args: args
   };
+
+  project.artifacts.push({
+    sources: [files],
+    output: output,
+    cmd: command
+  });
 
   launch(command, cb);
 };
@@ -539,17 +648,16 @@ var build = function() {
   generate(files);
 
   try {
-    GlobalBuildSet.generate_dependency_graph();
-    dump(GlobalBuildSet.dep_graph);
-    dump(GlobalBuildSet.topological_order);
+    GlobalBuildSet.generate();
   }
   catch(e) {
-    console.log(e.message);
+    console.log(e.stack);
   }
 
   var projects = GlobalBuildSet.topological_order.map(function(name) {
     return GlobalBuildSet.lookup_project(name);
   });
+  projects.reverse();
 
   var compile = function(err, cb) {
     async.forEach(
@@ -558,7 +666,7 @@ var build = function() {
         console.log('\n' + name + ' started');
         async.series([project.__prebuild, project.__publish, project.__compile], cb);
       },
-      function(err) { cb(null); }
+      function(err) { if (exists(err)) return err; cb(null); }
     );
   };
 
@@ -568,7 +676,10 @@ var build = function() {
       function(project, cb) {
         async.series([project.__link, project.__postbuild], cb);
       },
-      function(err) { console.log('Finished'); }
+      function(err) { 
+        projects.forEach(function(project) { dump(project); });
+        console.log('Finished'); 
+      }
     );
   };
 
@@ -587,6 +698,12 @@ command_map = {
     action: function() {
       build();
     }    
+  },
+  'debug': {
+    triggers: ['-d', '--d', '-debug', '--debug', 'debug'],
+    action: function() {
+      DEBUG = true;
+    }
   }
 };
 

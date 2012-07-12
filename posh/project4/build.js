@@ -2,15 +2,12 @@ Project({
     name: 'Project4',
     type: 'StaticLib',
     compiler_flags: ['-fPIC', '-std=c++11'],
-    files: ['*.cpp'],
-    deps: [],
-    headers: ['*.h'],
-    output_root: '/var/tmp/build',
-    includedir: 'p4includes',
-    prebuild: function() {
-      console.log('Project4 prebuild executed');
-    },
-    postbuild: function() {
-      console.log('Project4 postbuild executed');
-    }
+    installdir: 'install',
+    include_paths: ['include'],
+
+    source_root: 'src',
+    sources: ['*.cpp'],
+
+    header_root: 'include',
+    headers: ['*.h']
 });
