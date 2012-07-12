@@ -1,13 +1,14 @@
 Project({
-    name: "Project2",
-    type: "SharedLib",
+    name: 'Project2',
+    type: 'SharedLib',
     compiler_flags: ['-fPIC'],
     files: ['*.cpp'],
-    deps: [],
+    deps: ['Project3'],
+    publish: ['*.h'],
     prebuild: function() {
-      console.log("Project2 prebuild executed");
+      console.log('Project2 prebuild executed');
     },
     postbuild: function() {
-      console.log("Project2 postbuild executed");
+      console.log('Project2 postbuild executed');
     }
 });

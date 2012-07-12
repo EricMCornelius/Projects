@@ -1,13 +1,12 @@
 Project({
-  name: 'Project1',
-  type: 'c++',
+  name: 'Project1.tsk',
+  type: 'Application',
   deps: ['Project2'],
   files: ['*.cpp'],
-  outputdir: '/var/tmp/build',
   prebuild: function() {
-    console.log("Project1 prebuild executed");
+    console.log('Project1 prebuild executed');
   },
   postbuild: function() {
-    console.log("Project1 postbuild executed");
+    console.log('Project1 postbuild executed');
   }
 });

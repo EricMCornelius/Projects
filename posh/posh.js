@@ -4,14 +4,31 @@ var glob = require('glob');
 var path = require('path');
 var util = require('util');
 var proc = require('child_process');
-var Q = require('q');
+var async = require('async');
+
+fs.copy = function (src, dst, cb) {
+  function copy(err) {
+    var is, os;
+
+    if (!err) {
+      return cb(new Error("File " + dst + " exists."));
+    }
+
+    fs.stat(src, function (err) {
+      if (err) {
+        return cb(err);
+      }
+      is = fs.createReadStream(src);
+      os = fs.createWriteStream(dst);
+      util.pump(is, os, cb);
+    });
+  }
+
+  fs.stat(dst, copy);
+};
 
 function exists(obj) {
   return (obj !== undefined && obj !== null);
-}
-
-function non_empty(str) {
-  return str !== "";
 }
 
 function initialize(obj, vars) {
@@ -26,13 +43,6 @@ function initialize(obj, vars) {
     if (vars.hasOwnProperty(prop))
       obj[prop] = vars[prop];
   }
-}
-
-var forEach = function(obj, func) {
-  Object.keys(obj).forEach(function(key) {
-    var val = obj[key];
-    func(key, val);
-  });
 }
 
 function BuildSetType(vars) {
@@ -155,32 +165,46 @@ BuildSet = function(vars) {
 GlobalBuildSet = BuildSet({name: "GlobalBuildSet"});
 
 ProjectType = function(vars) {
-  initialize(this, vars);
-  this.build_set.add_project(this);
+  var self = this;
+
+  self.name = "";
+  self.type = "";
+  self.target = "";
+  self.deps = [];
+  self.files = [];
+  self.publish = [];
+  self.options = [];
+  self.prebuild = function() { };
+  self.compile = function() { };
+  self.link = function() { }; 
+  self.install = function() { };
+  self.postbuild = function() { };
+  self.__prebuild = function(cb) { self.prebuild(); cb(null); };
+  self.__compile = function(cb) { self.toolchain.compile(self, cb); };
+  self.__link = function(cb) { self.toolchain.link(self, cb); };
+  self.__install = function(cb) { self.toolchain.install(self, cb); };
+  self.__postbuild = function(cb) { self.postbuild(); cb(null); };
+
+  self.build_set = GlobalBuildSet;
+  self.toolchain = null;
+
+  initialize(self, vars);
+  self.build_set.add_project(self);
 
   if (!('root' in vars))
-    this.root = path.dirname(current_file);
+    self.root = path.dirname(current_file);
   if (!('outputdir' in vars))
-    this.outputdir = path.join(this.root, 'build');
+    self.outputdir = path.join(self.root, 'build');
+  if (!('bindir' in vars))
+    self.bindir = path.join(self.root, 'bin');
+  if (!('libdir' in vars))
+    self.libdir = path.join(self.root, 'lib');
+  if (!('includedir' in vars))
+    self.includedir = path.join(self.root, 'include');
   if (!('toolchain' in vars))
-    this.toolchain = current_toolchain;
+    self.toolchain = current_toolchain;
   if (!('target' in vars))
-    this.target = this.name;
-};
-
-ProjectType.prototype.defaults = {
-  name: "",
-  type: "",
-  target: "",
-  deps: [],
-  files: [],
-  publish: [],
-  options: [],
-  prebuild: function() { },
-  build: function() { this.toolchain.build(this); },
-  postbuild: function() { },
-  build_set: GlobalBuildSet,
-  toolchain: null
+    self.target = self.name;
 };
 
 Project = function(vars) {
@@ -204,48 +228,30 @@ BuildSettings = function(vars) {
   return new BuildSettingsType(vars);
 };
 
-ToolchainType = function(vars) {
-  initialize(this, vars);
-};
+GccToolchainType = function(args) {
+  var self = this;  
 
-ToolchainType.prototype.defaults = {
-  name: "",
-  compiler: "",
-  linker: "", 
-  settings: BuildSettings(),
-  generators: {
-    include_paths: function(args) { return []; },
-    lib_paths: function(args) { return []; },
-    links: function(args) { return []; },
-    defines: function(args) { return []; },
-    compiler_flags: function(args) { return []; },
-    linker_flags: function(args) { return []; },
-    append_settings: function(args) { }
-  },
-  build: function(project) { }
-};
+  self.name = "g++",
+  self.compiler = "g++",
+  self.linker = "g++",
+  self.settings = BuildSettings({include_paths: ['include']}),
 
-Toolchain = function(vars) {
-  return new ToolchainType(vars);
-}
-
-gcc = Toolchain(
-{
-  name: "g++",
-  compiler: "g++",
-  linker: "g++",
-  settings: BuildSettings({include_paths: ['include']}),
-
-  generators: {
-    include_paths: function(args) {
+  self.generators = {
+    includes: function(args) {
       return args.map(function(path) {
         return '-I' + path;
       });
     },
 
-    lib_paths: function(args) {
+    libs: function(args) {
       return args.map(function(path) {
         return '-L' + path;
+      });
+    },
+
+    rpaths: function(args) {
+      return args.map(function(path) {
+        return '-Wl,-rpath,' + path;
       });
     },
 
@@ -272,54 +278,86 @@ gcc = Toolchain(
     append_settings: function(settings, appended) {
       var fields = ['include_paths', 'lib_paths', 'libs', 'compiler_flags', 'linker_flags', 'defines'];
       fields.map(function(field) {
-        settings[field] = settings[field].concat(appended[field]);
+        settings[field].concat(appended[field]);
       });
     },
-  },
+  };
 
-  compile_env: function(args) {
-    var settings = BuildSettings(args);
-    this.generators.append_settings(settings, this.settings);
+  self.compile_env = function(project) {
+    var settings = BuildSettings(project);
+   
+    var deps = project.deps.map(function(name) { return GlobalBuildSet.lookup_project(name); });
+    deps.forEach(function(dep) { 
+      settings.include_paths.push(dep.includedir); 
+    });
+
+    self.generators.append_settings(settings, self.settings);
  
-    var flags = this.generators.compiler_flags(settings.compiler_flags);
-    var defines = this.generators.defines(settings.defines);
-    var includes = this.generators.defines(settings.include_paths);
+    var flags = self.generators.compiler_flags(settings.compiler_flags);
+    var defines = self.generators.defines(settings.defines);
+    var includes = self.generators.includes(settings.include_paths);
 
     var args = flags.concat(defines).concat(includes);
 
     return {
-      compiler: this.compiler,
+      compiler: self.compiler,
       args: args
     }
-  },
+  };
   
-  link_env: function(args) {
-    var settings = BuildSettings(args);
-    this.generators.append_settings(settings, this.settings);
+  self.link_env = function(project) {
+    var settings = BuildSettings(project);
   
-    var flags = this.generators.linker_flags(settings.linker_flags);
-    var libpaths = this.generators.lib_paths(settings.lib_paths);
-    var links = this.generators.links(settings.libs);
+    var deps = project.deps.map(function(name) { return GlobalBuildSet.lookup_project(name); });
+    deps.forEach(function(dep) {
+      settings.lib_paths.push(dep.libdir);
+      settings.libs.push(dep.target);
+    });
 
-    var args = flags.concat(libpaths).concat(links);
+    self.generators.append_settings(settings, self.settings);
+  
+    var flags = self.generators.linker_flags(settings.linker_flags);
+    var libpaths = self.generators.libs(settings.lib_paths);
+    var links = self.generators.links(settings.libs.reverse);
+    var rpaths = self.generators.rpaths(settings.lib_paths);
+
+    var args = flags.concat(libpaths).concat(links).concat(rpaths);
 
     return {
-      linker: this.linker,
+      linker: self.linker,
       args: args
     }
-  },
+  };
 
-  build: function(project) {
-    var compile_env = this.compile_env(project);
-    var compile = this.compile;
-    var link_env = this.link_env(project);
-    var link = this.link;
-    compile(project, compile_env, function() { link(project, link_env, function() { }) });
-  },
+  self.install_env = function(project) {
+    return { };
+  }
 
-  compile: function(project, env, callback) {
-    console.log("Compiling now...");
+  self.install = function(project, cb) {
+    console.log('Installing ' + project.name + '...');
+    var env = self.install_env(project);
+    
+    try {
+      fs.mkdirSync(project.includedir);
+    }
+    catch(e) { }
 
+    var files = [];
+    project.publish.map(function(file) {
+      files = files.concat(glob.sync(file, {cwd: project.root}));
+    });
+
+    async.forEach(
+      files, 
+      function(file, cb) { fs.copy(path.join(project.root, file), path.join(project.includedir, file), cb); },
+      function(err) { cb(null); }
+    );
+  };
+
+  self.compile = function(project, cb) {
+    console.log('Compiling ' + project.name + '...');
+    var env = self.compile_env(project);
+  
     try {
       fs.mkdirSync(project.outputdir);
     }
@@ -352,25 +390,54 @@ gcc = Toolchain(
       invoke.on('exit', function(code) {
         --pending;
         if (pending === 0)
-          callback();
+          cb(null, null);
       });
     });
-  },
+  };
 
-  link: function(project, env, callback) {
-    console.log("Linking now...");
+  self.link = function(project, cb) {
+    console.log('Linking ' + project.name + '...');
+    var env = self.link_env(project);
+
+    try {
+      fs.mkdirSync(project.libdir);
+    }
+    catch(e) { } 
+
+    try {
+      fs.mkdirSync(project.bindir);
+    }
+    catch(e) { } 
     
     var obj_glob = path.join(project.outputdir, '*.o');
     var files = glob.sync(obj_glob, null);
 
-    var pending = files.length;
     args = [].concat(env.args);
-    if (project.type == "SharedLib")
+    
+    var target = project.target;
+    var output = '';
+    if (project.type === 'SharedLib') {
       args = args.concat('-shared');
-    args = args.concat('-o', project.target).concat(files);
+      target = 'lib' + target + '.so';
+      output = path.join(project.libdir, target);
+    }
+    else if(project.type === 'StaticLib') {
+      target = 'lib' + target + '.a';
+      output = path.join(project.libdir, target);
+      args = ['rcs', output];
+      env.linker = 'ar';
+    }
+    else if(project.type === 'Application') {
+      output = path.join(project.bindir, target);
+    }
+
+    if (project.type !== 'StaticLib')
+      args = args.concat('-o', output);
+
+    args = args.concat(files);
 
     console.log(env.linker);
-    dump(args);
+    console.log(args);
 
     var invoke = proc.spawn(env.linker, args);
     invoke.stdout.on('data', function(data) {
@@ -382,54 +449,20 @@ gcc = Toolchain(
     });
 
     invoke.on('exit', function(code) {
-      --pending;
-      if (pending === 0)
-        callback();
+      cb(null);
     });
-  }
-});
+  };
+};
 
-current_toolchain = gcc;
+current_toolchain = new GccToolchainType();
 
 var current_file = '';
-include = function(path) {
-  current_file = path;
-  var code = fs.readFileSync(path);
-  var script = vm.createScript(code, path);
+include = function(file_path) {
+  current_file = file_path;
+  var code = fs.readFileSync(file_path);
+  var script = vm.createScript(code, file_path);
   return script.runInThisContext();
 }
-
-var recursive_search = function(parent, cont) {
-  fs.readdir(parent.path, function(error, files) {
-    if (error)
-      return cont(error);
-    var remaining = files.length;
-    if (!remaining)
-      return cont(null);
-    files.forEach(function(file) {
-      var node = { path: path.join(parent.path, file), children: [] };
-      if (file === "build.js") {
-        parent.context = node.path;
-	return cont(null);
-      }
-      else {
-        fs.stat(node.path, function(error, info) {
-          if (info && info.isDirectory()) {
-            parent.children.push(node);
-            recursive_search(node, function(error) {
-              if (--remaining == 0)
-                return cont(null);
-            });
-          }
-          else {
-            if (--remaining == 0)
-              return cont(null);
-          }
-        });
-      }
-    });
-  });
-};
 
 dump = function(arg) {
   try {
@@ -440,26 +473,23 @@ dump = function(arg) {
   }
 }
 
-var tree = { path: __dirname, children: [] };
-
-var generate = function(node) {
-  if (exists(node.context))
-    include(node.context);
-  
-  node.children.forEach(function(child){ generate(child); });
+var generate = function(files) {
+  files.forEach(function(file) { include(file); });
 }
 
 var build = function() {
-  GlobalBuildSet.topological_order.map(function(name) {
+  // call each project in the build set in topological order
+  async.mapSeries(GlobalBuildSet.topological_order, function(name, cb) {
+    // retrieve project and chain steps
     var project = GlobalBuildSet.lookup_project(name);
-    project.prebuild();
-    project.build();
-    project.postbuild();
-  });  
+    console.log('\n' + name + ' started');
+
+    async.series([project.__prebuild, project.__compile, project.__link, project.__install, project.__postbuild], function(err, results) { if (!err) console.log(name + ' completed!'); cb(); });
+  }, function() { });
 }
 
 var post_search = function(err) {
-  generate(tree);
+  generate(files);
 
   try {
     GlobalBuildSet.generate_dependency_graph();
@@ -470,9 +500,10 @@ var post_search = function(err) {
     console.log(e.message);
   }
 
-  dump(GlobalBuildSet.projects);
-
   build();
 }
 
-recursive_search(tree, post_search);
+var build_glob = '**/build.js'
+var files = glob.sync(build_glob, null);
+files = files.map(function(file){ return path.join(path.dirname(__filename), file); });
+post_search();

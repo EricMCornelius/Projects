@@ -1,5 +1,8 @@
+#include <test.h>
+#include <cool.h>
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-  std::cout << "Hello world" << std::endl;
+  print();
+  cool();
 }
