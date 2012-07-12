@@ -4,7 +4,7 @@ Project({
     compiler_flags: ['-fPIC'],
     files: ['*.cpp'],
     deps: [],
-    publish: ['*.h'],
+    headers: ['*.h'],
     prebuild: function() {
       console.log('Project3 prebuild executed');
     },

@@ -3,8 +3,8 @@ Project({
     type: 'SharedLib',
     compiler_flags: ['-fPIC'],
     files: ['*.cpp'],
-    deps: ['Project3'],
-    publish: ['*.h'],
+    deps: ['Project3', 'Project4'],
+    headers: ['*.h'],
     prebuild: function() {
       console.log('Project2 prebuild executed');
     },

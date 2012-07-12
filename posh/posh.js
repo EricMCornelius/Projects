@@ -6,6 +6,20 @@ var util = require('util');
 var proc = require('child_process');
 var async = require('async');
 
+var DEBUG = false;
+
+dump = function(arg) {
+  if (!DEBUG)
+    return;
+
+  try {
+    console.log(JSON.stringify(arg, null, 2));
+  }
+  catch(e) {
+    console.log(arg);
+  }
+}
+
 fs.copy = function (src, dst, cb) {
   function copy(err) {
     var is, os;
@@ -172,7 +186,8 @@ ProjectType = function(vars) {
   self.target = "";
   self.deps = [];
   self.files = [];
-  self.publish = [];
+  self.headers = [];
+  self.resources = [];
   self.options = [];
   self.prebuild = function() { };
   self.compile = function() { };
@@ -193,16 +208,38 @@ ProjectType = function(vars) {
 
   if (!('root' in vars))
     self.root = path.dirname(current_file);
+
+  if (!('output_root' in vars))
+    self.output_root = self.root;
+
   if (!('outputdir' in vars))
-    self.outputdir = path.join(self.root, 'build');
+    self.outputdir = path.join(self.output_root, 'build');
+  else
+    self.outputdir = path.join(self.output_root, self.outputdir);
+
   if (!('bindir' in vars))
-    self.bindir = path.join(self.root, 'bin');
+    self.bindir = path.join(self.output_root, 'bin');
+  else
+    self.bindir = path.join(self.output_root, self.bindir);
+
   if (!('libdir' in vars))
-    self.libdir = path.join(self.root, 'lib');
+    self.libdir = path.join(self.output_root, 'lib');
+  else
+    self.libdir = path.join(self.output_root, self.libdir);
+
   if (!('includedir' in vars))
-    self.includedir = path.join(self.root, 'include');
+    self.includedir = path.join(self.output_root, 'include');
+  else
+    self.includedir = path.join(self.output_root, self.includedir);
+
+  if (!('resourcedir' in vars))
+    self.resourcedir = path.join(self.output_root, 'resources');
+  else
+    self.resourcedir = path.join(self.output_root, self.resourcedir);
+
   if (!('toolchain' in vars))
     self.toolchain = current_toolchain;
+
   if (!('target' in vars))
     self.target = self.name;
 };
@@ -311,14 +348,14 @@ GccToolchainType = function(args) {
     var deps = project.deps.map(function(name) { return GlobalBuildSet.lookup_project(name); });
     deps.forEach(function(dep) {
       settings.lib_paths.push(dep.libdir);
-      settings.libs.push(dep.target);
+      settings.libs.unshift(dep.target);
     });
 
     self.generators.append_settings(settings, self.settings);
   
     var flags = self.generators.linker_flags(settings.linker_flags);
     var libpaths = self.generators.libs(settings.lib_paths);
-    var links = self.generators.links(settings.libs.reverse);
+    var links = self.generators.links(settings.libs);
     var rpaths = self.generators.rpaths(settings.lib_paths);
 
     var args = flags.concat(libpaths).concat(links).concat(rpaths);
@@ -343,7 +380,7 @@ GccToolchainType = function(args) {
     catch(e) { }
 
     var files = [];
-    project.publish.map(function(file) {
+    project.headers.map(function(file) {
       files = files.concat(glob.sync(file, {cwd: project.root}));
     });
 
@@ -375,22 +412,25 @@ GccToolchainType = function(args) {
       output = path.join(project.outputdir, base + '.o');
       args = env.args.concat(['-c', file, '-o', output]);
 
-      console.log(env.compiler);
+      dump(env.compiler);
       dump(args);
 
       var invoke = proc.spawn(env.compiler, args);
       invoke.stdout.on('data', function(data) {
-        console.log('stdout: ' + data);
+        dump(data);
       });
 
       invoke.stderr.on('data', function(data) {
-        console.log('stderr: ' + data);
+        console.log(data + '');
       });
 
       invoke.on('exit', function(code) {
+        if (code !== 0)
+          return cb(new Error(code));
+        
         --pending;
         if (pending === 0)
-          cb(null, null);
+          cb(null);
       });
     });
   };
@@ -436,19 +476,22 @@ GccToolchainType = function(args) {
 
     args = args.concat(files);
 
-    console.log(env.linker);
-    console.log(args);
+    dump(env.linker);
+    dump(args);
 
     var invoke = proc.spawn(env.linker, args);
     invoke.stdout.on('data', function(data) {
-      console.log('stdout: ' + data);
+      dump(data);
     });
 
     invoke.stderr.on('data', function(data) {
-      console.log('stderr: ' + data);
+      console.log(data + '');
     });
 
     invoke.on('exit', function(code) {
+      if (code !== 0)
+        return cb(new Error(code));
+
       cb(null);
     });
   };
@@ -464,15 +507,6 @@ include = function(file_path) {
   return script.runInThisContext();
 }
 
-dump = function(arg) {
-  try {
-    console.log(JSON.stringify(arg, null, 2));
-  }
-  catch(e) {
-    console.log(arg);
-  }
-}
-
 var generate = function(files) {
   files.forEach(function(file) { include(file); });
 }
@@ -484,7 +518,10 @@ var build = function() {
     var project = GlobalBuildSet.lookup_project(name);
     console.log('\n' + name + ' started');
 
-    async.series([project.__prebuild, project.__compile, project.__link, project.__install, project.__postbuild], function(err, results) { if (!err) console.log(name + ' completed!'); cb(); });
+    async.series([project.__prebuild, project.__compile, project.__link, project.__install, project.__postbuild], 
+      function(err, results) { 
+        if (err) { console.log(err); return cb(err); } console.log(name + ' completed!'); cb(); 
+    });
   }, function() { });
 }
 
