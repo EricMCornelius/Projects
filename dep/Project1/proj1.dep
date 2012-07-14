@@ -1,0 +1,14 @@
+register({
+  id: 'proj1.publish',
+  type: 'publish',
+  source: 'include',
+  target: 'target'
+});
+
+register({
+  id: 'proj1.link',
+  type: 'link',
+  source: '%.cpp',
+  target: '%.o',
+  deps: ['proj1.compile', 'test.link']
+});

@@ -260,6 +260,7 @@ ProjectType = function(vars) {
   self.resources = [];
   self.options = [];
   self.artifacts = [];
+  self.commands = [];
 
   initialize(self, vars);
 
@@ -486,25 +487,28 @@ GccToolchainType.prototype.compile = function(project, cb) {
     output = path.join(project.builddir, base + '.o');
     
     return {
-      source: file,
-      output: output
+      type: 'object_file',
+      info: {
+        source: { path: file },
+        output: { path: output }
+      }
     };
   });
 
   var source_stat = function(cb) {
-    var sources = artifacts.map(function(artifact){ return artifact.source; });
+    var sources = artifacts.map(function(artifact){ return artifact.info.source.path; });
     async.map(sources, fs.stat, function(err, results) {
       for (var i = 0; i < results.length; ++i)
-        artifacts[i].source_timestamp = results[i].mtime; 
+        artifacts[i].info.source.timestamp = results[i].mtime; 
       cb();
     });
   };
 
   var output_stat = function(cb) {
-    var outputs = artifacts.map(function(artifact){ return artifact.output; });
+    var outputs = artifacts.map(function(artifact){ return artifact.info.output.path; });
     async.map(outputs, fs.stat, function(err, results) {
       for (var i = 0; i < results.length; ++i)
-        artifacts[i].output_timestamp = results[i].mtime;
+        artifacts[i].info.output.timestamp = results[i].mtime;
       cb();
     });
   };
@@ -513,11 +517,11 @@ GccToolchainType.prototype.compile = function(project, cb) {
     project.artifacts = project.artifacts.concat(artifacts);
 
     artifacts = artifacts.filter(function(artifact) {
-      return (artifact.source_timestamp > artifact.output_timestamp);
+      return (artifact.info.source.timestamp > artifact.info.output.timestamp);
     });
 
     var commands = artifacts.map(function(artifact) {
-      args = env.args.concat(['-c', artifact.source, '-o', artifact.output]);
+      args = env.args.concat(['-c', artifact.info.source.path, '-o', artifact.info.output.path]);
  
       return {
         cmd: env.compiler,
@@ -526,8 +530,7 @@ GccToolchainType.prototype.compile = function(project, cb) {
       };
     });
 
-    console.log("COMMANDS!");
-    dump(commands);
+    project.commands = project.commands.concat(commands);
 
     async.forEach(
       commands,
@@ -607,23 +610,57 @@ GccToolchainType.prototype.link = function(project, cb) {
     output = path.join(project.bindir, target);
   }
 
-  if (project.type !== 'StaticLib')
-    args = args.concat('-o', output);
-
-  args = args.concat(files);
-
-  var command = {
-    cmd: env.linker,
-    args: args
+  var artifact = {
+    type: project.type,
+    info: {
+      sources: [],
+      output: { path: output }
+    }
   };
 
-  project.artifacts.push({
-    sources: [files],
-    output: output,
-    cmd: command
-  });
+  var source_stat = function(cb) {
+    async.map(files, fs.stat, function(err, results) {
+      for (var i = 0; i < results.length; ++i)
+        artifact.info.sources.push({ path: files[i], timestamp: results[i].mtime });
+      cb();
+    });
+  };
 
-  launch(command, cb);
+  var output_stat = function(cb) {
+    fs.stat(output, function(err, result) {
+      artifact.info.output.timestamp = result.mtime;
+      cb();
+    });
+  };
+
+  var link_action = function() {
+    project.artifacts.push(artifact);
+
+    var updated = false;
+    artifact.info.sources.forEach(function(source) {
+      if (source.timestamp > artifact.info.output.timestamp)
+        updated = true;
+    });
+    
+    if (!updated)
+      return cb();
+
+    if (project.type !== 'StaticLib')
+      args = args.concat('-o', output);
+
+    args = args.concat(files);
+
+    var command = {
+      cmd: env.linker,
+      args: args
+    };
+
+    project.commands.push(command);
+
+    launch(command, cb);    
+  };
+
+  async.parallel([source_stat, output_stat], function(err, results) { link_action(); });
 };
 
 current_toolchain = new GccToolchainType();
@@ -717,3 +754,5 @@ process.argv.forEach(function(arg) {
     });
   }
 });
+
+
