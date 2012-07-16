@@ -261,12 +261,14 @@ process_node = function(args) {
 };
 
 // run concurrent build with up to concurrency number of simultaneous executors
-process_graph = function(registry, concurrency, g) {
+process_graph = function(args) {
   // default to 4 concurrent actions
-  concurrency = concurrency || 4;
+  concurrency = args.concurrency || 4;
+  registry = args.registry;
+  callback = args.cb || function() {};
 
   // if g isn't defined, load from the registry
-  g = g || DependencyGraph(registry.nodes);
+  g = args.g || DependencyGraph(registry.nodes);
 
   // associate node id to remaining dependency count
   var counts = {};
@@ -276,7 +278,12 @@ process_graph = function(registry, concurrency, g) {
   var active = g.nodes.filter(function(node){ return node.deps.length === 0; });
   var concurrent = 0;
 
+  // tracks the number of nodes which have finished execution
+  var executed = 0;
+  var termination = g.nodes.length;
+
   var process_next = function() {
+    // if concurrency has been exceeded, ignore this invocation
     if (concurrent >= concurrency)
       return;
 
@@ -290,6 +297,12 @@ process_graph = function(registry, concurrency, g) {
         node: next,
         cb: function(err) {
           --concurrent;
+
+          // if all nodes are finished executing, call termination callback
+          ++executed;
+          if (executed === termination)
+            return callback();
+
           g.parents[next.id].forEach(function(id) {
             --counts[id];
             if (counts[id] === 0)
@@ -361,7 +374,7 @@ ScanDepFiles = function(cb) {
       exec: function(args) {
         var node = args.node;
         var graph = args.graph;
-        var cb = args.cb;
+        var post = args.cb;
 
         // look up the first .dep file detected
         // when iterating from current to root directory
@@ -380,7 +393,7 @@ ScanDepFiles = function(cb) {
           },
           postrun: function() {
             envs[node.id] = __env;
-            cb();
+            post();
           }
         });
       }
@@ -388,7 +401,10 @@ ScanDepFiles = function(cb) {
 
     // register the dep_file node processing action, and process the graph
     DepRegistry.add_action(process);
-    process_graph(DepRegistry);
+    process_graph({
+      registry: DepRegistry,
+      cb: cb
+    });
   });
 }
 
@@ -420,8 +436,9 @@ var compile = {
   type: 'compile',
   exec: function(args) {
     setTimeout(function() {
-      console.log('Compilation finished'); cb();
-    }, 100);
+      console.log('Compilation finished: ' + args.node.id);
+      args.cb();
+    }, 1000);
   }
 };
 
@@ -429,8 +446,9 @@ var link = {
   type: 'link',
   exec: function(args) {
     setTimeout(function() {
-      console.log('Link finished'); cb();
-    }, 300);
+      console.log('Link finished: ' + args.node.id);
+      args.cb();
+    }, 2000);
   }
 };
 
@@ -438,8 +456,9 @@ var publish = {
   type: 'publish',
   exec: function(args) {
     setTimeout(function() {
-      console.log('Publish finished'); cb();
-    }, 200);
+      console.log('Publish finished: ' + args.node.id);
+      args.cb();
+    }, 500);
   }
 };
 
@@ -448,7 +467,9 @@ GlobalRegistry.add_action(link);
 GlobalRegistry.add_action(publish);
 
 ScanDepFiles(function() {
-  process_graph(GlobalRegistry);
+  process_graph({
+    registry: GlobalRegistry
+  });
 });
 
 //stress_test();

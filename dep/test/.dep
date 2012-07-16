@@ -20,5 +20,3 @@ register({
   source: 'build/*.o',
   target: 'install/lib/test'
 });
-
-__env['test'] = 'hi';
