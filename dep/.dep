@@ -1,0 +1,5 @@
+var path = require('path');
+
+console.log('Processing root');
+__env['root'] = path.dirname(__file);
+__env['processed'] = [];

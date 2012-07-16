@@ -1,0 +1,24 @@
+register({
+  id: 'test.publish',
+  type: 'publish',
+  source: 'include',
+  target: 'install/include'
+});
+
+register({
+  id: 'test.compile',
+  type: 'compile',
+  source: 'src/$1.cpp',
+  target: 'build/$1.o',
+  deps: []
+});
+
+register({
+  id: 'test.link',
+  type: 'link',
+  deps: ['test.compile'],
+  source: 'build/*.o',
+  target: 'install/lib/test'
+});
+
+__env['test'] = 'hi';

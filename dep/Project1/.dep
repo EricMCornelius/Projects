@@ -1,0 +1,18 @@
+register({
+  id: 'proj1.publish',
+  type: 'publish',
+  source: 'include',
+  target: 'install/include'
+});
+
+register({
+  id: 'proj1.link',
+  type: 'link',
+  source: 'build/*.o',
+  target: 'install/lib/proj1',
+  deps: ['proj1.compile', 'test.link']
+});
+
+console.log(__file);
+console.log(__env);
+__env['processed'].push('Project1');

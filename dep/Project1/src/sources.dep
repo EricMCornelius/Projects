@@ -1,7 +1,0 @@
-register({
-  id: 'proj1.compile',
-  type: 'compile',
-  source: 'include',
-  target: 'target',
-  deps: ['test.publish']
-});

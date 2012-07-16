@@ -1,0 +1,8 @@
+register({
+  id: 'proj2.publish',
+  type: 'publish',
+  source: 'include',
+  target: 'install/include'
+});
+
+__env['project'] = 'Project2';

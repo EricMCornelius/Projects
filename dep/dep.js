@@ -3,14 +3,62 @@ var util = require('util');
 var async = require('async');
 var vm = require('vm');
 var glob = require('glob');
+var proc = require('child_process');
+var assert = require('assert');
+var path = require('path');
+var $ = require('jquery');
 
+// add require to the global namespace
+global.require = require;
+
+// global used to track name of currently processed file
+__file = __filename;
+
+// global used to track current file env
+__env = {};
+
+// extends path with a split function
+path.split = function(p) {
+  return p.split(path.sep);
+};
+
+path.join_arr = function(l) {
+  return l.reduce(function(l, r) {
+    return path.join(l, r);
+  }, '');
+};
+
+// pretty-printed json dump
 dump = function(obj) {
-  console.log(JSON.stringify(obj, null, 2));
+  return JSON.stringify(obj, null, 2);
+}
+
+// deep clone of object
+clone = function(obj) {
+  return $.extend(true, {}, obj);
 }
 
 exists = function(obj) {
   return (obj !== undefined && obj !== null);
 }
+
+launch = function(args, cb) {
+  var invoke = proc.spawn(args.cmd, args.args, args.opts);
+  invoke.stdout.on('data', function(data) {
+    console.log(data + '');
+  });
+
+  invoke.stderr.on('data', function(data) {
+    console.log(data + '');
+  });
+
+  invoke.on('exit', function(code) {
+    if (code !== 0)
+      return cb(new Error(code));
+
+    cb(null);
+  });
+};
 
 // Does what it says... constructs a custom error constructor
 ErrorConstructorConstructor = function(name) {
@@ -28,28 +76,61 @@ ErrorConstructorConstructor = function(name) {
 
 CycleError = ErrorConstructorConstructor('CycleError');
 
+UnhandledError = ErrorConstructorConstructor('UnhandledNode');
 
 
 RegistryType = function() {
-  this.contents = []
+  this.nodes = [],
+  this.actions = []
 };
 
-RegistryType.prototype.add = function(obj) {
-  this.contents.push(obj);
+RegistryType.prototype.add_node = function(node) {
+  assert(exists(node.id), 'Node must specify an id');
+
+  this.nodes.push(node);
+};
+
+RegistryType.prototype.add_action = function(action) {
+  assert(exists(action.type), 'Action must specify a type');
+
+  this.actions.push(action);
+};
+
+RegistryType.prototype.process = function(args) {
+  var executed = false;
+  this.actions.forEach(function(action) {
+    if (action.type === args.node.type) {
+      executed = true;
+      action.exec(args);
+    }
+  });
+
+  if (!executed)
+    throw new UnhandledError({message: 'No matching action type detected', node: node});
 };
 
 GlobalRegistry = new RegistryType();
 
-register = function(obj) {
-  GlobalRegistry.add(obj);
+register = function(node) {
+  node.__path = __file;
+  GlobalRegistry.add_node(node);
 };
 
-include = function(path, cb) {
-  fs.readFile(path, null, function(err, code) {
-    if (err)
-      cb(err);
+DepRegistry = new RegistryType();
+
+add_dep = function(node) {
+  DepRegistry.add_node(node);
+};
+
+// args
+// path: file to load
+// prerun: function to execute before evaluation
+// postrun: function to execute following evaluation
+include = function(args) {
+  fs.readFile(args.path, null, function(err, code) {
+    args.prerun();
     vm.runInThisContext(code);
-    cb(null);
+    args.postrun();
   });
 };
 
@@ -73,7 +154,7 @@ generate_dependency_graph = function(g) {
   g.nodes.forEach(function(node) {
     if (!exists(node.deps))
       node.deps = [];
-    
+
     g.parents[node.id] = [];
     g.children[node.id] = [];
   });
@@ -92,7 +173,7 @@ generate_dependency_graph = function(g) {
   });
 
   dag_assert(g);
-  generational_sort(g);
+  //generational_sort(g);
 };
 
 // assert that the graph is infact a DAG
@@ -173,42 +254,201 @@ generational_sort = function(g) {
   } while(active.length > 0)
 };
 
+// execute the steps associated with this node
+// and execute callback when finished
+process_node = function(args) {
+  args.registry.process(args);
+};
+
+// run concurrent build with up to concurrency number of simultaneous executors
+process_graph = function(registry, concurrency, g) {
+  // default to 4 concurrent actions
+  concurrency = concurrency || 4;
+
+  // if g isn't defined, load from the registry
+  g = g || DependencyGraph(registry.nodes);
+
+  // associate node id to remaining dependency count
+  var counts = {};
+
+  // generate array of nodes with out-degree 0
+  g.nodes.forEach(function(node){ counts[node.id] = node.deps.length; });
+  var active = g.nodes.filter(function(node){ return node.deps.length === 0; });
+  var concurrent = 0;
+
+  var process_next = function() {
+    if (concurrent >= concurrency)
+      return;
+
+    var next = active.shift();
+    if (exists(next)) {
+      ++concurrent;
+
+      process_node({
+        registry: registry,
+        graph: g,
+        node: next,
+        cb: function(err) {
+          --concurrent;
+          g.parents[next.id].forEach(function(id) {
+            --counts[id];
+            if (counts[id] === 0)
+              active.push(g.node_map[id]);
+          });
+
+          process_next();
+        }
+      });
+
+      process_next();
+    }
+  };
+
+  process_next();
+};
+
 DependencyGraph = function(nodes) {
   return new DependencyGraphType(nodes);
 }
 
-Execute = function(cb) {
-  glob.Glob('**/*.dep', null, function(err, results) {
-    async.forEach(results, function(file, cb) {
-      include(file, cb);
-    }, function(err){ cb(); });
+ScanDepFiles = function(cb) {
+  glob.Glob('**/.dep', null, function(err, results) {
+    // sort the .dep files lexicographically by directory
+    // this ensures that all parent directory nodes will preceed child directory nodes
+    results.sort(function(p1, p2){ return path.dirname(p1) > path.dirname(p2); });
+
+    // iterate through list of paths, and for each directory
+    // set deps to the first dep file encountered iterating towards root
+    // if nothing is found, set a dependency on the root dep file ('global')
+    // TODO: improve efficiency
+    var deps = {};
+    results.forEach(function(p) {
+      var dir = path.dirname(p);
+      deps[dir] = [];
+      var split = path.split(dir);
+      while (split.length > 0) {
+        split.pop();
+        var joined = path.join_arr(split);
+        if (joined in deps) {
+          deps[dir].push(joined);
+          break;
+        }
+      }
+      if (deps[dir].length === 0 && dir !== '.')
+        deps[dir].push('.');
+    });
+
+    // create nodes for each .dep file and add them
+    // to the dependency registry
+    for (var id in deps) {
+      add_dep({
+        id: id,
+        type: 'dep_file',
+        deps: deps[id],
+        file: id + '/.dep'
+      });
+    }
+
+    // each .dep file inherits its parent environment and
+    // may pass a modified __env object to all its children
+
+    // map of .dep directory name to corresponding env
+    envs = {};
+
+    // action to trigger for each dep_file node in the DepRegistry graph (tree)
+    var process = {
+      type: 'dep_file',
+      exec: function(args) {
+        var node = args.node;
+        var graph = args.graph;
+        var cb = args.cb;
+
+        // look up the first .dep file detected
+        // when iterating from current to root directory
+        var dep = graph.children[node.id][0];
+
+        // load the source code for this file, and before
+        // executing it set the __file and __env markers
+        // afterwards, save the environment back into the envmap
+        // for this .dep file
+        include({
+          path: node.file,
+          prerun: function() {
+            __file = node.file;
+            if (dep)
+              __env = clone(envs[dep]);
+          },
+          postrun: function() {
+            envs[node.id] = __env;
+            cb();
+          }
+        });
+      }
+    };
+
+    // register the dep_file node processing action, and process the graph
+    DepRegistry.add_action(process);
+    process_graph(DepRegistry);
   });
 }
 
-Execute(function() {
-  var graph = DependencyGraph(GlobalRegistry.contents);
-  console.log(graph.generations);
-  //console.log(graph);
-  console.log('Done!');
+var stress_test = function(count) {
+  count = count || 10000;
+
+  for (var i = 0; i < count; ++i) {
+    var node = {
+      id: i.toString(),
+      deps: []
+    };
+
+    if (i === 0) {
+      register(node);
+      continue;
+    }
+
+    while (Math.floor(Math.random() * 2)) {
+      var dep = Math.floor(Math.random() * i).toString();
+      if (node.deps.indexOf(dep) === -1)
+        node.deps.push(dep);
+    }
+
+    register(node);
+  };
+}
+
+var compile = {
+  type: 'compile',
+  exec: function(args) {
+    setTimeout(function() {
+      console.log('Compilation finished'); cb();
+    }, 100);
+  }
+};
+
+var link = {
+  type: 'link',
+  exec: function(args) {
+    setTimeout(function() {
+      console.log('Link finished'); cb();
+    }, 300);
+  }
+};
+
+var publish = {
+  type: 'publish',
+  exec: function(args) {
+    setTimeout(function() {
+      console.log('Publish finished'); cb();
+    }, 200);
+  }
+};
+
+GlobalRegistry.add_action(compile);
+GlobalRegistry.add_action(link);
+GlobalRegistry.add_action(publish);
+
+ScanDepFiles(function() {
+  process_graph(GlobalRegistry);
 });
 
-
-for (var i = 0; i < 100000; ++i) {
-  var node = {
-    id: i.toString(),
-    deps: []
-  };
-
-  if (i === 0) {
-    register(node);
-    continue;
-  }
-
-  while (Math.floor(Math.random() * 2)) {
-    var dep = Math.floor(Math.random() * i).toString();
-    if (node.deps.indexOf(dep) === -1)
-      node.deps.push(dep);
-  }
-
-  register(node);
-};
+//stress_test();
