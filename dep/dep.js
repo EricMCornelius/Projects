@@ -6,6 +6,7 @@ var glob = require('glob');
 var proc = require('child_process');
 var assert = require('assert');
 var path = require('path');
+var wrench = require('wrench');
 var $ = require('jquery');
 
 // add require to the global namespace
@@ -13,6 +14,9 @@ global.require = require;
 
 // global used to track name of currently processed file
 __file = __filename;
+
+// global build root
+__build_root = '/var/tmp/build';
 
 // global used to track current file env
 __env = {};
@@ -26,6 +30,29 @@ path.join_arr = function(l) {
   return l.reduce(function(l, r) {
     return path.join(l, r);
   }, '');
+};
+
+// extends fs with an asynchronous copy function
+fs.copy = function (src, dst, cb) {
+  console.log('Copying ' + src + ' -> ' + dst);
+
+  function copy(err) {
+    var is, os;
+
+    if (!err)
+      console.log('Overwriting file: ' + dst);
+
+    fs.stat(src, function (err) {
+      if (err)
+        return cb(err);
+
+      is = fs.createReadStream(src);
+      os = fs.createWriteStream(dst);
+      util.pump(is, os, cb);
+    });
+  }
+
+  fs.stat(dst, copy);
 };
 
 // pretty-printed json dump
@@ -42,21 +69,42 @@ exists = function(obj) {
   return (obj !== undefined && obj !== null);
 }
 
+empty = function(str) {
+  return (str !== '');
+}
+
 launch = function(args, cb) {
+  args.opts = args.opts || {};
+  var root = args.opts.cwd || __dirname;
+
+  var invocation = {
+    cmds: ['cd ' + root, [args.cmd].concat(args.args).join(' ')],
+    stdout: [],
+    stderr: [],
+    exit_code: 0
+  };
+
+  console.log(invocation.cmds[1]);
+
   var invoke = proc.spawn(args.cmd, args.args, args.opts);
   invoke.stdout.on('data', function(data) {
-    console.log(data + '');
+    invocation.stdout.push(data);
   });
 
   invoke.stderr.on('data', function(data) {
-    console.log(data + '');
+    invocation.stderr.push(data);
   });
 
   invoke.on('exit', function(code) {
-    if (code !== 0)
-      return cb(new Error(code));
+    invocation.exit_code = code;
+  });
 
-    cb(null);
+  invoke.on('close', function() {
+    if (invocation.exit_code !== 0) {
+      console.log(invocation.stderr + '');
+      return cb(new Error(invocation.exit_code), invocation);
+    }
+    cb(null, invocation);
   });
 };
 
@@ -78,48 +126,77 @@ CycleError = ErrorConstructorConstructor('CycleError');
 
 UnhandledError = ErrorConstructorConstructor('UnhandledNode');
 
+DuplicateIdError = ErrorConstructorConstructor('DuplicateId');
+
+DuplicateTargetError = ErrorConstructorConstructor('DuplicateTarget');
+
 
 RegistryType = function() {
   this.nodes = [],
-  this.actions = []
+  this.process_actions = [],
+  this.register_actions = []
 };
 
-RegistryType.prototype.add_node = function(node) {
+RegistryType.prototype.register_node = function(node) {
   assert(exists(node.id), 'Node must specify an id');
 
-  this.nodes.push(node);
+  this.register(node);
 };
 
-RegistryType.prototype.add_action = function(action) {
+RegistryType.prototype.add_process_action = function(action) {
   assert(exists(action.type), 'Action must specify a type');
 
-  this.actions.push(action);
+  this.process_actions.push(action);
+};
+
+RegistryType.prototype.add_register_action = function(action) {
+  assert(exists(action.type), 'Action must specify a type');
+
+  this.register_actions.push(action);
+};
+
+RegistryType.prototype.register = function(node) {
+  this.register_actions.forEach(function(action) {
+    if (action.type === node.type || action.type === '*') {
+      action.exec(node);
+    }
+  });
+  this.nodes.push(node);
 };
 
 RegistryType.prototype.process = function(args) {
   var executed = false;
-  this.actions.forEach(function(action) {
-    if (action.type === args.node.type) {
+  this.process_actions.forEach(function(action) {
+    if (action.type === args.node.type || action.type === '*') {
       executed = true;
       action.exec(args);
     }
   });
 
-  if (!executed)
-    throw new UnhandledError({message: 'No matching action type detected', node: node});
+  if (!executed) {
+    //throw new UnhandledError({message: 'No matching action type detected', node: node});
+    args.cb();
+  }
 };
 
 GlobalRegistry = new RegistryType();
 
 register = function(node) {
-  node.__path = __file;
-  GlobalRegistry.add_node(node);
+  node.__file = path.basename(__file);
+  node.__dir = path.dirname(__file);
+  node.root = path.resolve(node.__dir, node.root);
+  node.src_root = node.src_root || '';
+  node.target_root = node.target_root || '';
+  node.src_root = path.resolve(node.root, node.src_root);
+  node.target_root = path.resolve(node.root, node.target_root);
+  node.deps = node.deps || [];
+  GlobalRegistry.register_node(node);
 };
 
 DepRegistry = new RegistryType();
 
 add_dep = function(node) {
-  DepRegistry.add_node(node);
+  DepRegistry.register_node(node);
 };
 
 // args
@@ -129,7 +206,13 @@ add_dep = function(node) {
 include = function(args) {
   fs.readFile(args.path, null, function(err, code) {
     args.prerun();
-    vm.runInThisContext(code);
+    try {
+      vm.runInThisContext(code);
+    }
+    catch(e) {
+      console.log('Failed to process file: ' + args.path);
+      throw (e);
+    }
     args.postrun();
   });
 };
@@ -142,12 +225,42 @@ DependencyGraphType = function(nodes) {
 
   self.nodes = nodes;
   self.node_map = {};
-  nodes.forEach(function(node){ self.node_map[node.id] = node; });
 
+  // maps node id to dependents
   self.parents = {};
+
+  // maps node id to dependencies
   self.children = {};
 
+  // maps targets (outputs) to nodes
+  self.target_map = {};
+
+  generate_node_map(self);
+  generate_target_map(self);
   generate_dependency_graph(self);
+};
+
+// generate the node map for the graph, and check for duplicate node ids
+generate_node_map = function(g) {
+  g.nodes.forEach(function(node) {
+    if (node.id in g.node_map)
+      throw new DuplicateIdError({message: 'Duplicate node id', id: node.id});
+
+    g.node_map[node.id] = node;
+  });
+};
+
+// generate the output map for the graph, and check for duplicate outputs
+generate_target_map = function(g) {
+  g.nodes.forEach(function(node) {
+    if (!exists(node.target) && node.target !== '')
+      return;
+
+    if (node.target in g.target_map)
+      throw new DuplicateTargetError({message: 'Duplicate target', target:node.target});
+
+    g.target_map[node.target] = node.id;
+  });
 };
 
 generate_dependency_graph = function(g) {
@@ -252,6 +365,15 @@ generational_sort = function(g) {
     g.generations.push(active.map(function(node){ return node.id; }));
     active = process_generation(active);
   } while(active.length > 0)
+};
+
+// visits all dependent nodes starting from root, executing cb at each location
+recursive_visit = function(g, node, cb) {
+  node.deps.forEach(function(dep) {
+    var dep = g.node_map[dep];
+    if (cb(dep) !== false)
+      recursive_visit(g, dep, cb);
+  });
 };
 
 // execute the steps associated with this node
@@ -387,7 +509,7 @@ ScanDepFiles = function(cb) {
         include({
           path: node.file,
           prerun: function() {
-            __file = node.file;
+            __file = path.join(__dirname, node.file);
             if (dep)
               __env = clone(envs[dep]);
           },
@@ -400,7 +522,7 @@ ScanDepFiles = function(cb) {
     };
 
     // register the dep_file node processing action, and process the graph
-    DepRegistry.add_action(process);
+    DepRegistry.add_process_action(process);
     process_graph({
       registry: DepRegistry,
       cb: cb
@@ -435,40 +557,238 @@ var stress_test = function(count) {
 var compile = {
   type: 'compile',
   exec: function(args) {
-    setTimeout(function() {
-      console.log('Compilation finished: ' + args.node.id);
-      args.cb();
-    }, 1000);
+    var node = args.node;
+    var g = args.graph;
+    var cb = args.cb;
+
+    var include_paths = {};
+    recursive_visit(g, node, function(node) {
+      if (node.type === 'publish') {
+        include_paths[path.dirname(node.target)] = true;
+      }
+      else if(node.type === 'external') {
+        node.include_path.forEach(function(p) {
+          include_paths[p] = true;
+        });
+      }
+    });
+
+    var paths = [];
+    for (p in include_paths)
+      paths.push('-I' + p);
+
+    var flags = node.compile_flags || [];
+
+    // compile the compilation unit via g++
+    var compile_func = function() {
+      var compile_args = ['-c', node.source, '-o', node.target].concat(flags).concat(paths);
+      wrench.mkdirSyncRecursive(path.dirname(node.target));
+      launch({
+        cmd: 'g++',
+        args: compile_args,
+        opts: {cwd: node.root}
+      }, cb);
+    };
+
+    // gather implicit dependency info construction for the compilation unit via g++ -MM
+    var dep_func = function(cb) {
+      var dep_args = ['-c', node.source, '-MM'].concat(flags).concat(paths);
+      launch({
+        cmd: 'g++',
+        args: dep_args,
+        opts: {cwd: node.root}
+      }, function(err, data) {
+        var dep_info = data.stdout + '';
+        var split = dep_info.replace(/[\\\n]/g, '')
+                            .split(' ')
+                            .filter(empty);
+
+        // first element is the .o file target
+        split.shift();
+        // second element is the .cpp source
+        split.shift();
+
+        var implicit_deps = split.map(function(dep) {
+          return g.target_map[dep];
+        });
+
+        if (err) {
+          console.log(data.stderr + '');
+          throw (err);
+        }
+
+        cb();
+      });
+    }
+
+    dep_func(compile_func);
   }
 };
 
 var link = {
   type: 'link',
   exec: function(args) {
-    setTimeout(function() {
-      console.log('Link finished: ' + args.node.id);
-      args.cb();
-    }, 2000);
+    var node = args.node;
+    var g = args.graph;
+    var cb = args.cb;
+
+    var lib_paths = {};
+    var lib_names = {};
+    var obj_files = {};
+    recursive_visit(g, node, function(node) {
+      if (node.type === 'link') {
+        lib_paths[path.dirname(node.target)] = true;
+        lib_names[path.basename(node.target)] = true;
+      }
+      else if(node.type === 'compile') {
+        obj_files[node.target] = true;
+        return false;
+      }
+      else if(node.type === 'external') {
+        node.lib_path.forEach(function(p) {
+          lib_paths[p] = true;
+        });
+        node.libs.forEach(function(l) {
+          lib_names[l] = true;
+        });
+      }
+    });
+
+    var paths = [];
+    for (p in lib_paths)
+      paths.push('-L' + p);
+
+    var rpaths = [];
+    for (p in lib_paths)
+      rpaths.push('-Wl,-rpath,' + p);
+
+    var libs = [];
+    for (l in lib_names)
+      libs.push('-l' + l);
+
+    var objs = [];
+    for (o in obj_files)
+      objs.push(o);
+
+    var target_dir = path.dirname(node.target);
+    var target_name = path.basename(node.target);
+
+    var flags = node.link_flags || [];
+    if (node.subtype === 'shared') {
+      flags.push('-shared');
+      target_name = 'lib' + target_name + '.so';
+    }
+
+    var target = path.join(target_dir, target_name);
+    wrench.mkdirSyncRecursive(path.dirname(target));
+
+    var args = ['-o', target].concat(flags).concat(objs).concat(paths).concat(rpaths).concat(libs);
+
+    launch({
+      cmd: 'g++',
+      args: args,
+      opts: {cwd: node.root}
+    }, cb);
   }
 };
 
 var publish = {
   type: 'publish',
   exec: function(args) {
-    setTimeout(function() {
-      console.log('Publish finished: ' + args.node.id);
-      args.cb();
-    }, 500);
+    var node = args.node;
+    var cb = args.cb;
+
+    fs.copy(node.source, node.target, cb);
   }
 };
 
-GlobalRegistry.add_action(compile);
-GlobalRegistry.add_action(link);
-GlobalRegistry.add_action(publish);
+var template = {
+  type: 'template',
+  exec: function(node) {
+    if (typeof node.source === 'string')
+      var sources = glob.sync(node.source, {cwd: node.src_root});
+    else
+      var sources = node.source;
+
+    var deps = [];
+    var count = 0;
+    sources.forEach(function(src) {
+      var ext = path.extname(src);
+      var file = path.basename(src, ext);
+      var dir = path.dirname(src);
+      var inst = clone(node);
+      inst.source = path.resolve(inst.src_root, src);
+
+      inst.target = inst.target.replace('${file}', file)
+                               .replace('${ext}', ext)
+                               .replace('${dir}', dir)
+                               .replace('${base}', node.__dir)
+                               .replace('${root}', inst.root);
+
+      inst.target = path.resolve(inst.target_root, inst.target);
+      inst.id = inst.id + '/' + ++count;
+      inst.type = node.subtype;
+      deps.push(inst.id);
+      register(inst);
+    });
+
+    // template nodes don't actually have a source or target
+    delete node.source;
+    delete node.target;
+    node.deps = node.deps.concat(deps);
+  }
+};
+
+var external = {
+  type: 'external',
+  exec: function(node) {
+    node.lib_path = node.lib_path || [];
+    node.include_path = node.include_path || [];
+    node.libs = node.libs || [];
+  }
+};
+
+var general = {
+  type: '*',
+  exec: function(node) {
+    if (node.type === 'template' || node.type === 'external')
+      return;
+
+    // resolve the source and target paths for the node
+    node.source = path.resolve(node.src_root, node.source);
+    node.target = path.resolve(node.target_root, node.target);
+  }
+};
+
+var compile_register = {
+  type: 'compile',
+  exec: function(node) {
+    node.compile_flags = node.compile_flags || __env.compile_flags;
+  }
+};
+
+var link_register = {
+  type: 'link',
+  exec: function(node) {
+    node.link_flags = node.link_flags || __env.link_flags;
+  }
+};
+
+GlobalRegistry.add_process_action(compile);
+GlobalRegistry.add_process_action(link);
+GlobalRegistry.add_process_action(publish);
+
+GlobalRegistry.add_register_action(template);
+GlobalRegistry.add_register_action(general);
+GlobalRegistry.add_register_action(compile_register);
+GlobalRegistry.add_register_action(link_register);
 
 ScanDepFiles(function() {
   process_graph({
-    registry: GlobalRegistry
+    registry: GlobalRegistry,
+    cb: function() {
+      console.log(this.g);
+    }
   });
 });
 

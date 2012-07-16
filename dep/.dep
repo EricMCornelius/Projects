@@ -1,5 +1,2 @@
-var path = require('path');
-
-console.log('Processing root');
-__env['root'] = path.dirname(__file);
-__env['processed'] = [];
+__env['compile_flags'] = ['-fPIC', '-std=c++11'];
+__env['link_flags'] = [];

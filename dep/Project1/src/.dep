@@ -1,7 +1,0 @@
-register({
-  id: 'proj1.compile',
-  type: 'compile',
-  source: 'src/$1.cpp',
-  target: 'build/$1.o',
-  deps: ['test.publish']
-});

@@ -1,8 +1,18 @@
 register({
   id: 'proj1.publish',
-  type: 'publish',
-  source: 'include',
-  target: 'install/include'
+  type: 'template',
+  subtype: 'publish',
+  source: 'include/*',
+  target: 'install/include/${file}.h'
+});
+
+register({
+  id: 'proj1.compile',
+  type: 'template',
+  subtype: 'compile',
+  source: 'src/*.cpp',
+  target: 'build/${file}.o',
+  deps: ['test.publish']
 });
 
 register({
@@ -10,9 +20,5 @@ register({
   type: 'link',
   source: 'build/*.o',
   target: 'install/lib/proj1',
-  deps: ['proj1.compile', 'test.link']
+  deps: ['proj1.compile', 'test.link', 'boost']
 });
-
-console.log(__file);
-console.log(__env);
-__env['processed'].push('Project1');

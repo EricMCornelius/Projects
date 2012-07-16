@@ -1,0 +1,7 @@
+register({
+  id: 'boost',
+  type: 'external',
+  include_path: ['/usr/include'],
+  lib_path: ['/usr/lib64'],
+  libs: ['boost_thread-mt', 'boost_system-mt']
+})

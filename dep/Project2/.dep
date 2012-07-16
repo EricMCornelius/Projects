@@ -1,8 +1,7 @@
 register({
   id: 'proj2.publish',
-  type: 'publish',
-  source: 'include',
-  target: 'install/include'
+  type: 'template',
+  subtype: 'publish',
+  source: 'include/*.h',
+  target: 'install/include/${file}.h'
 });
-
-__env['project'] = 'Project2';
