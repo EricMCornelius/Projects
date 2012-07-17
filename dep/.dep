@@ -1,2 +1,0 @@
-__env['compile_flags'] = ['-fPIC', '-std=c++11'];
-__env['link_flags'] = [];

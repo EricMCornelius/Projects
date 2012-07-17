@@ -1,7 +1,0 @@
-register({
-  id: 'proj2.publish',
-  type: 'template',
-  subtype: 'publish',
-  source: 'include/*.h',
-  target: 'install/include/${file}.h'
-});

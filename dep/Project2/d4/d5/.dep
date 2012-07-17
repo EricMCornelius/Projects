@@ -1,8 +1,0 @@
-register({
-  id: 'd5.compile',
-  type: 'template',
-  subtype: 'compile',
-  src_root: 'src',
-  source: ['test1.cpp', 'test2.cpp'],
-  target: '${dir}/build/${file}.o'
-});
