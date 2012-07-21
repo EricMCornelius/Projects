@@ -1,0 +1,710 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"fon",
+				"font-variant"
+			],
+			[
+				"backgroun",
+				"background-color"
+			],
+			[
+				"Glo",
+				"GlobalRegistry"
+			],
+			[
+				"Dup",
+				"DuplicateTargetError"
+			],
+			[
+				"__dir",
+				"__dirname"
+			],
+			[
+				"th",
+				"tls.connect(port /* host, options, cb */);"
+			],
+			[
+				"path",
+				"path.dirname(path);"
+			],
+			[
+				"vmrun",
+				"vm.runInNewContext();"
+			],
+			[
+				"vm",
+				"vm.createScript(code, ctx, name);"
+			],
+			[
+				"runIn",
+				"vm.runInThisContext();"
+			],
+			[
+				"runin",
+				"vm.runInThisContext();"
+			],
+			[
+				"fsre",
+				"fs.readFile(path, encoding_);"
+			],
+			[
+				"fsreadfil",
+				"fs.readFile(path, encoding_);"
+			],
+			[
+				"fs",
+				"fs.rmdir(path, callback);"
+			],
+			[
+				"https",
+				"https.request(options, cb);"
+			],
+			[
+				"Gl",
+				"glob.Glob(pattern, options, cb);"
+			],
+			[
+				"v",
+				"vm.createScript(code, ctx, name);"
+			],
+			[
+				"cry",
+				"crypto.Decipher();"
+			],
+			[
+				"Glob",
+				"glob.Glob(pattern, options, cb);"
+			],
+			[
+				"zl",
+				"zlib.inflateRaw(buffer, callback);"
+			],
+			[
+				"cons",
+				"console.info(message);"
+			],
+			[
+				"glo",
+				"glob.Glob(pattern, options, cb);"
+			],
+			[
+				"subl",
+				"sublime_plugin"
+			],
+			[
+				"s",
+				"sync  (variable)"
+			],
+			[
+				"chil",
+				"child_process.spawn(file, args, options);"
+			],
+			[
+				"renam",
+				"renameSync  (function)"
+			],
+			[
+				"as",
+				"async.filter();"
+			],
+			[
+				"fsstat",
+				"fs.stat(path, callback);"
+			],
+			[
+				"back_in",
+				"back_inserter(_Container &__x)	back_insert_iterator<_Container>"
+			],
+			[
+				"token_iter",
+				"token_iterator<class TokenizerFunc, class Iterator, class Type>	class"
+			],
+			[
+				"istream",
+				"istreambuf_iterator<typename _CharT>	class"
+			],
+			[
+				"istre",
+				"istreambuf_iterator<typename _CharT>	class"
+			],
+			[
+				"getlin",
+				"getline(basic_istream<char> &__in, basic_string<char> &__str, char __delim)	basic_istream<char> &"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "test.js",
+			"settings":
+			{
+				"buffer_size": 4847,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "pass.js",
+			"settings":
+			{
+				"buffer_size": 882,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "views/login.ejs",
+			"settings":
+			{
+				"buffer_size": 387,
+				"line_ending": "Unix",
+				"name": "<h1>Login</h1>"
+			}
+		},
+		{
+			"file": "views/layout.ejs",
+			"settings":
+			{
+				"buffer_size": 338,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "public/html/index.html",
+			"settings":
+			{
+				"buffer_size": 4144,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "Packages/User/nodejs.sublime-build",
+	"command_palette":
+	{
+		"height": 132.0,
+		"selected_items":
+		[
+			[
+				"reinde",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"reindent",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"disable",
+				"Package Control: Disable Package"
+			],
+			[
+				"enable",
+				"Package Control: Enable Package"
+			],
+			[
+				"disa",
+				"Package Control: Disable Package"
+			],
+			[
+				"enable pa",
+				"Package Control: Enable Package"
+			],
+			[
+				"Enable",
+				"Package Control: Enable Package"
+			],
+			[
+				"diable",
+				"Package Control: Disable Package"
+			],
+			[
+				"SetSyntax: ja",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"java",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"nodejs",
+				"Nodejs::Build Completions"
+			],
+			[
+				"javasc",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"git stat",
+				"Git: Status"
+			],
+			[
+				"git status",
+				"Git: Status"
+			],
+			[
+				"git log",
+				"Git: Log Current File"
+			],
+			[
+				"clang",
+				"SublimeClang: Clear cache"
+			],
+			[
+				"rein",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"reind",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"reinden",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"c++",
+				"Set Syntax: C++"
+			]
+		],
+		"width": 602.0
+	},
+	"console":
+	{
+		"height": 399.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/corneliu/Programming/Projects/dep/Project1/src/main.cpp",
+		"/home/corneliu/Programming/Projects/dep/test/src/test.cpp",
+		"/home/corneliu/Programming/Projects/dep/dep.js",
+		"/home/corneliu/Programming/Projects/dep/Project2/d4/d5/.dep",
+		"/home/corneliu/Programming/Projects/dep/external/.dep",
+		"/home/corneliu/Programming/Projects/dep/Project1/.dep",
+		"/home/corneliu/Programming/Projects/dep/.dep",
+		"/home/corneliu/Programming/Projects/dep/test/.dep",
+		"/home/corneliu/Programming/Projects/dep/test/src/helper.cpp",
+		"/home/corneliu/Programming/Projects/dep/test/include/test.h",
+		"/home/corneliu/Programming/Projects/dep/.cache",
+		"/home/corneliu/Programming/Projects/dep/test/install/include/test.h",
+		"/home/corneliu/Programming/Projects/dep/node_modules/posh/package.json",
+		"/home/corneliu/Programming/Projects/dep/node_modules/posh/posh.js",
+		"/home/corneliu/Programming/Projects/dep/build.js",
+		"/home/corneliu/Programming/Projects/dep/node_modules/posh/toolchains/gcc.js",
+		"/home/corneliu/Programming/Projects/dep/node_modules/posh/utilities/posh_utils.js",
+		"/home/corneliu/Programming/Projects/dep/test.dep",
+		"/home/corneliu/Programming/Projects/dep/Project1/src/.dep",
+		"/home/corneliu/Programming/Projects/posh/posh.js",
+		"/home/corneliu/Programming/Projects/dep/Project2/.dep",
+		"/home/corneliu/Programming/Projects/dep/Project1/deps/deps.dep",
+		"/home/corneliu/Programming/Projects/dep/Project2/d1/.dep",
+		"/home/corneliu/Programming/Projects/dep/Project2/d1/d3/.dep",
+		"/home/corneliu/Programming/Projects/dep/Project2/d1/d2/.dep",
+		"/home/corneliu/.config/sublime-text-2/Packages/SublimeCodeIntel/Default (Linux).sublime-keymap",
+		"/home/corneliu/Programming/Projects/dep/dep.sublime-project",
+		"/home/corneliu/.config/sublime-text-2/Packages/Default/Default (Linux).sublime-keymap",
+		"/home/corneliu/.config/sublime-text-2/Packages/User/Default (Linux).sublime-keymap",
+		"/home/corneliu/.config/sublime-text-2/Packages/User/Preferences.sublime-settings",
+		"/home/corneliu/.config/sublime-text-2/Packages/Default/Preferences.sublime-settings",
+		"/home/corneliu/.config/sublime-text-2/Packages/Nodejs/Nodejs.sublime-completions",
+		"/home/corneliu/.config/sublime-text-2/Packages/Nodejs/tools/doc_builder.js",
+		"/home/corneliu/Programming/Projects/dep/dep.sublime-workspace",
+		"/home/corneliu/.config/sublime-text-2/Packages/Nodejs/Nodejs.sublime-settings",
+		"/home/corneliu/.config/sublime-text-2/Packages/NodeJsPlugin/test.js",
+		"/home/corneliu/.config/sublime-text-2/Packages/NodeJsPlugin/NodeJsPlugin.py",
+		"/home/corneliu/SublimeText2/sublime_plugin.py",
+		"/home/corneliu/SublimeText2/PackageSetup.py",
+		"/home/corneliu/SublimeText2/sublime_text",
+		"/home/corneliu/.config/sublime-text-2/Packages/Package Control/Package Control.sublime-settings",
+		"/home/corneliu/.config/sublime-text-2/Packages/SublimeCodeIntel/Default (Linux).sublime-mousemap",
+		"/home/corneliu/.config/sublime-text-2/Packages/User/Base File.sublime-settings",
+		"/home/corneliu/.config/sublime-text-2/Packages/SublimeCodeIntel/Base File.sublime-settings",
+		"/home/corneliu/.config/sublime-text-2/Packages/User/nodejs.sublime-build",
+		"/home/corneliu/.config/sublime-text-2/Packages/User/JavaScript.sublime-settings",
+		"/home/corneliu/.config/sublime-text-2/Packages/User/SublimeClang.sublime-settings",
+		"/home/corneliu/.config/sublime-text-2/Packages/SublimeClang/SublimeClang.sublime-settings",
+		"/home/corneliu/Programming/Projects/posh/test.js",
+		"/home/corneliu/Desktop/main.cpp",
+		"/home/corneliu/.config/sublime-text-2/Packages/User/cpp.sublime-build",
+		"/home/corneliu/llvm/libcxx/include/chrono",
+		"/usr/include/c++/4.7.0/bits/stl_algo.h",
+		"/usr/include/wchar.h",
+		"/home/corneliu/llvm/libcxx/include/__config",
+		"/home/corneliu/.config/sublime-text-2/Packages/C++/C++.sublime-build",
+		"/home/corneliu/.config/sublime-text-2/Packages/User/C++.sublime-settings"
+	],
+	"find":
+	{
+		"height": 34.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"console.log",
+			"app.use",
+			"create",
+			"view engine",
+			"list",
+			"flags",
+			"root",
+			"cb",
+			"GlobalReg",
+			"add_dep",
+			"DepRegistry",
+			"env",
+			"__env",
+			"fs",
+			"mkdir",
+			"path",
+			"glob",
+			"fs",
+			"util",
+			"async",
+			"proc",
+			"wrench",
+			"retrieve",
+			"save_cac",
+			"save_cache",
+			"console.log",
+			"path.join_arr",
+			"path.join",
+			"include",
+			"include(",
+			"include",
+			"global",
+			"'.'",
+			"__",
+			"__dirname",
+			"ScanDepFiles",
+			"build",
+			"build(",
+			"retrieve",
+			"g.parents[",
+			"node",
+			"save_cache_files",
+			"console.log(triggers",
+			"invalidate",
+			"console.log",
+			"join",
+			"console.log",
+			"process_graph",
+			"cache_files",
+			"parse",
+			"retrieve",
+			"prerun",
+			"prerun\n\nprerun",
+			"prerun",
+			"register",
+			"target_root",
+			"src_root",
+			"install_root",
+			"build_root",
+			"log",
+			"compile_",
+			"target_map",
+			"add_register_action",
+			"launch\n\nempty",
+			"launch",
+			"shared",
+			"path",
+			"build_root",
+			"escape",
+			"__path",
+			"root",
+			"node",
+			"clone",
+			"escape",
+			"RegExp",
+			"GlobalRegistry",
+			"console",
+			"__this_",
+			"__fil",
+			"__file",
+			"__this_file",
+			"console.log",
+			"__file",
+			"__active_path",
+			"console",
+			"__active_path",
+			">",
+			"<",
+			"antialias",
+			"GlobalRegistry",
+			"RegistryType",
+			"dump",
+			"launch",
+			"launch\n\n\nlaunch",
+			"process",
+			"dump",
+			"ids",
+			"g.ids",
+			"dependency",
+			"include",
+			"include\n\n\ninclude",
+			"GlobalBuildSet",
+			"completion",
+			"charac",
+			"<GL",
+			"reindent",
+			"auto_indent"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 4,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "test.js",
+					"settings":
+					{
+						"buffer_size": 4847,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4025,
+								4025
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 390.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "pass.js",
+					"settings":
+					{
+						"buffer_size": 882,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								882,
+								882
+							]
+						],
+						"settings":
+						{
+							"auto_name": "",
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "views/login.ejs",
+					"settings":
+					{
+						"buffer_size": 387,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								387,
+								387
+							]
+						],
+						"settings":
+						{
+							"auto_name": "<h1>Login</h1>",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "views/layout.ejs",
+					"settings":
+					{
+						"buffer_size": 338,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								338,
+								338
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "public/html/index.html",
+					"settings":
+					{
+						"buffer_size": 4144,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2501,
+								2501
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 585.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 34.0
+	},
+	"input":
+	{
+		"height": 29.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.clang":
+	{
+		"height": 211.0
+	},
+	"output.exec":
+	{
+		"height": 308.0
+	},
+	"output.git":
+	{
+		"height": 336.0
+	},
+	"replace":
+	{
+		"height": 0.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"project1/",
+				"Project1/.dep"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 310.0,
+	"status_bar_visible": true
+}

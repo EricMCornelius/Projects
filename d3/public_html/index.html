@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>D3 Tutorials</title>
+    <script type='text/javascript' src='/browserify.js'></script>
+    <style>
+      .bar:not(hover_highlight) {
+        stroke-width: 1;
+        opacity: 0.4;
+        -webkit-transition: stroke-width 500ms;
+        -webkit-transition: opacity 1000ms;
+      }
+      .bar.hover_highlight:hover {
+        stroke-width: 3;
+        opacity: 1.0;
+        -webkit-transition: stroke-width 1000ms;
+        -webkit-transition: opacity 1000ms;
+      }
+    </style>
+  </head>
+  <body>
+    <script type='text/javascript'>
+      init();
+
+      /*
+      .hover_highlight:hover {
+        opacity: 0.3;
+        -webkit-transition: opacity 500ms;
+      }
+      */
+    </script>
+  </body>
+</html>
