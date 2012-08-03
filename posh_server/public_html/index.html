@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>D3 Tutorials</title>
+    <script type='text/javascript' src='/browserify.js'></script>
+    <style>
+      ellipse {
+        fill: cyan;
+      }
+      .node.building ellipse {
+        fill: yellow;
+      }
+      .node.built ellipse {
+        fill: lime;
+      }
+      .node.failed ellipse {
+        fill: red;
+      }
+      .node.nonbuild ellipse {
+        fill: lightgrey;
+      }
+      .node.selected ellipse {
+        fill: orange; !important
+      }
+    </style>
+  </head>
+  <body>
+    <button type='button' id='generate_btn' onclick='execute_generate()'>Generate</button>
+    <button type='button' id='build_btn' onclick='execute_build()'>Build</button>
+    <button type='button' id='clean_btn' onclick='execute_clean()'>Clean</button>
+    <div id='chart' class='dumb' width=500 height=500 x=0 y=0></div>
+    <script type='text/javascript'>
+      init();
+    </script>
+  </body>
+</html>
