@@ -8,3 +8,7 @@
 Makefile
 
 build/
+*.tsk
+
+# Posh
+.posh

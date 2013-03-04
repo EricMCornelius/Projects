@@ -1,0 +1,8 @@
+env.compiler_flags = ['-std=c++11']
+
+register({
+  id: 'v4l2',
+  language: 'c++',
+  type: 'application',
+  libs: ['v4l2']
+});
