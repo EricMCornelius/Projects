@@ -1,10 +1,10 @@
 #include <AL/al.h>
 #include <AL/alc.h>
-//#include <AL/alext.h>
+
 #include <iostream>
 #include <fstream>
 #include <vector>
-//#include <windows.h>
+
 #include <sstream>
 #include <cmath>
 
@@ -18,21 +18,23 @@ const int SRATE = 44100;
 const int SEC = 2;
 
 void split(std::vector<std::string>& devices, const char* deviceList) {
-  char last = 'x';
-  char next = 'x';
+	char last = 'x';
+	char next = 'x';
 
-  unsigned int counter = 0;
-  std::stringstream  nextDevice;
-  while (!(last == '\0' && next == '\0')) {
-    last = next;
-	next = deviceList[counter++];
-	if (next != '\0')
-		nextDevice << next;
-	else {
-		devices.push_back(nextDevice.str());
-		nextDevice.str("");
+	unsigned int counter = 0;
+	std::stringstream  nextDevice;
+	while (!(last == '\0' && next == '\0')) {
+		last = next;
+		next = deviceList[counter++];
+		if (next != '\0')
+			nextDevice << next;
+		else {
+      auto name = nextDevice.str();
+      if (!name.empty())
+			  devices.emplace_back(name);
+			nextDevice.str("");
+		}
 	}
-  }
 }
 
 void generateWaveform(const std::string& filename) {
@@ -63,7 +65,7 @@ void enumeratePlayback(std::vector<std::string>& devices) {
 }
 
 struct AudioBuffer {
-    unsigned int id;
+	unsigned int id;
 	std::vector<char> data;
 	
 	AudioBuffer() : data(16384, 0) { }
@@ -72,7 +74,7 @@ struct AudioBuffer {
 class AudioCapture {
 public:
 	AudioCapture(const std::string& deviceName) 
-		: device(0), bufferSize(4096), sleepDuration(50), format(AL_FORMAT_MONO16) 
+	: device(0), bufferSize(4096), sleepDuration(50), format(AL_FORMAT_MONO16) 
 	{
 		std::cout << deviceName << std::endl;
 		device = alcCaptureOpenDevice(deviceName.c_str(), SRATE, format, bufferSize);
@@ -103,7 +105,7 @@ public:
 			output.write((char*) buffer.data(), 2 * sample);
 			length += sample;
 			output.flush();
-      std::this_thread::sleep_for(std::chrono::milliseconds(sleepDuration));
+			std::this_thread::sleep_for(std::chrono::milliseconds(sleepDuration));
 		}
 		
 		output.close();
@@ -115,19 +117,31 @@ private:
 	ALCdevice *device;
 	
 	const unsigned int bufferSize;
-  const unsigned int sleepDuration;
+	const unsigned int sleepDuration;
 	unsigned int format;
 };
 
 void captureAudio(const std::string& filename) {
 	static std::vector<std::string> devices = AudioCapture::deviceList();
-	static AudioCapture capture(devices[1]);
-	
-	int x;
-	std::cout << "Enter any key to start recording" << std::endl;
-	std::cin >> x;
 
-    capture.capture(filename);
+  int count = 0;
+	std::cout << "Capture Devices:\n";
+	for (auto& device : devices)
+		std::cout << "[" << ++count << "]" << device << "\n";
+
+  std::cout << "Enter selection: ";
+  std::string selection;
+  std::getline(std::cin, selection);
+
+  int val = std::atoi(selection.c_str()) - 1;
+  std::cout << "Selected device #" << val << std::endl;
+  static AudioCapture capture(devices[val]);
+
+  int x;
+  std::cout << "Enter any key to start recording" << std::endl;
+  std::cin >> x;
+
+  capture.capture(filename);
 }
 
 class AudioPlayer {
@@ -187,7 +201,7 @@ public:
 			}
 			if (unqueued.empty())
 				continue;
-				
+
 			AudioBuffer* nextBuffer = unqueued.front();
 			queued.push_back(nextBuffer);
 			unqueued.pop_front();
@@ -196,7 +210,7 @@ public:
 			if (read == 0)
 				break;
 			alBufferData(nextBuffer->id, AL_FORMAT_MONO16, &nextBuffer->data[0], read, SRATE);
-		
+
 			//Source
 			alSourceQueueBuffers(source, 1, &nextBuffer->id);
 			
@@ -230,7 +244,7 @@ public:
 		ALfloat ListenerPos[] = { 0.0, 0.0, 0.0 };
 		ALfloat ListenerVel[] = { 0.0, 0.0, 0.0 };
 		ALfloat ListenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
-                                                                       
+
 		alListenerfv(AL_POSITION, ListenerPos);
 		alListenerfv(AL_VELOCITY, ListenerVel);
 		alListenerfv(AL_ORIENTATION, ListenerOri);
@@ -249,8 +263,7 @@ void playAudio(const std::string& filename) {
 }
 
 int main(int argc, char *argv[]) {
-	//std::string output = "C:/Projects/audio/pitch.txt";
-	std::string output = "C:/Projects/audio/output.raw";
+	std::string output = "output.raw";
 	//generateWaveform(output);
 	captureAudio(output);
 	std::cout << "Play 1" << std::endl;
@@ -264,5 +277,5 @@ int main(int argc, char *argv[]) {
 	int x;
 	std::cin >> x;
 
-    return 0;
+	return 0;
 }

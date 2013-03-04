@@ -1,0 +1,9 @@
+env.compiler_flags = ['-std=c++11']
+
+register({
+  id: 'AsioServer',
+  language: 'c++',
+  type: 'application',
+  libs: ['pthread'],
+  deps: ['boost']
+});

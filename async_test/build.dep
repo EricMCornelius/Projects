@@ -1,0 +1,8 @@
+env.compiler_flags = ['-std=c++11'];
+
+register({
+  id: 'AsyncTest',
+  language: 'c++',
+  type: 'application',
+  libs: ['pthread']
+});
