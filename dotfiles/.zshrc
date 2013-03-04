@@ -29,4 +29,9 @@ bindkey "\e\e[C" forward-word
 bindkey "\e\e[D" backward-word
 # End of lines configured by zsh-newuser-install
 
+# prompt
+autoload -U colors && colors
+PS1="%{$fg[red]%}%n%{$reset_color%}@%{$fg[blue]%}%m %{$fg[yellow]%}%~ %{$reset_color%}%% "
+
+# sublime alias
 alias edit='sublime &'
