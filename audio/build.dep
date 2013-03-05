@@ -1,61 +1,16 @@
-var exec = require('child_process').exec;
-var async = require('async');
-
 env.compiler_flags = ['-std=c++11'];
 
-function pkg_config(pkg, cb) {
-  function empty(arg) {
-    return arg.length > 0;
-  }
-
-  function eliminate(match, arg) {
-    return arg.replace(match, '');
-  }
-
-  function tokenize(str) {
-    return str.toString().split(/\s+/g).filter(empty);
-  }
-
-  var compiler_flags = [];
-  var includedirs = [];
-  var libs = [];
-
-  function get_cflags(cb) {
-    exec('pkg-config --cflags-only-other ' + pkg, function(err, stdout, stderr) {
-      compiler_flags = tokenize(stdout);
-      cb(err);
-    });
-  }
-
-  function get_includedirs(cb) {
-    exec('pkg-config --cflags-only-I ' + pkg, function(err, stdout, stderr) {
-      includedirs = tokenize(stdout).map(async.apply(eliminate, /^\-I/g));
-      cb(err);
-    });
-  }
-
-  function get_libs(cb) {
-    exec('pkg-config --libs ' + pkg, function(err, stdout, stderr) {
-      libs = tokenize(stdout).map(async.apply(eliminate, /^\-l/g));
-      cb(err);
-    });
-  }
-
-  async.parallel([
-    get_cflags,
-    get_includedirs,
-    get_libs
-  ], function(err) { cb(err, { compiler_flags: compiler_flags, includedirs: includedirs, libs: libs }); });
-}
-
-pkg_config('openal', function(err, conf) {
-  register({
-    id: 'OpenALExample',
-    language: 'c++',
-    type: 'application',
-    compiler_flags: (env.compiler_flags || []).concat(conf.compiler_flags),
-    includedirs: (env.includedirs || []).concat(conf.includedirs),
-    libs: (env.libs || []).concat(conf.libs),
-    defines: ['_GLIBCXX_USE_NANOSLEEP']
-  });
+register({
+  id: 'OpenALExample',
+  language: 'c++', 
+  type: 'application', 
+  defines: ['_GLIBCXX_USE_NANOSLEEP'],
+  deps: ['openal']
 });
+
+register({
+  id: 'openal',
+  language: 'c++',
+  type: 'pkgconfig'
+});
+
