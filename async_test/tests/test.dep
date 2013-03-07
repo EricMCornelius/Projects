@@ -1,0 +1,5 @@
+register({
+  id: 'AsyncTester',
+  language: 'c++',
+  type: 'test'
+});

@@ -64,11 +64,11 @@ const std::vector<std::pair<int, std::string>> formats = {
 { V4L2_PIX_FMT_NV24, "NV24" },
 { V4L2_PIX_FMT_NV42, "NV42" },
 { V4L2_PIX_FMT_NV12M, "NV12M" },
-{ V4L2_PIX_FMT_NV21M, "NV21M" },
+//{ V4L2_PIX_FMT_NV21M, "NV21M" },
 { V4L2_PIX_FMT_NV12MT, "NV12MT" },
-{ V4L2_PIX_FMT_NV12MT_16X16, "NV12MT_16X16" },
+//{ V4L2_PIX_FMT_NV12MT_16X16, "NV12MT_16X16" },
 { V4L2_PIX_FMT_YUV420M, "YUV420M" },
-{ V4L2_PIX_FMT_YVU420M, "YVU420M" },
+//{ V4L2_PIX_FMT_YVU420M, "YVU420M" },
 { V4L2_PIX_FMT_SBGGR8, "SBGGR8" },
 { V4L2_PIX_FMT_SGBRG8, "SGBRG8" },
 { V4L2_PIX_FMT_SGRBG8, "SGRBG8" },
@@ -92,7 +92,7 @@ const std::vector<std::pair<int, std::string>> formats = {
 { V4L2_PIX_FMT_MPEG, "MPEG" },
 { V4L2_PIX_FMT_H264, "H264" },
 { V4L2_PIX_FMT_H264_NO_SC, "H264_NO_SC" },
-{ V4L2_PIX_FMT_H264_MVC, "H264_MVC" },
+//{ V4L2_PIX_FMT_H264_MVC, "H264_MVC" },
 { V4L2_PIX_FMT_H263, "H263" },
 { V4L2_PIX_FMT_MPEG1, "MPEG1" },
 { V4L2_PIX_FMT_MPEG2, "MPEG2" },
@@ -100,7 +100,7 @@ const std::vector<std::pair<int, std::string>> formats = {
 { V4L2_PIX_FMT_XVID, "XVID" },
 { V4L2_PIX_FMT_VC1_ANNEX_G, "VC1_ANNEX_G" },
 { V4L2_PIX_FMT_VC1_ANNEX_L, "VC1_ANNEX_L" },
-{ V4L2_PIX_FMT_VP8, "VP8" },
+//{ V4L2_PIX_FMT_VP8, "VP8" },
 { V4L2_PIX_FMT_CPIA1, "CPIA1" },
 { V4L2_PIX_FMT_WNVA, "WNVA" },
 { V4L2_PIX_FMT_SN9C10X, "SN9C10X" },
@@ -126,7 +126,7 @@ const std::vector<std::pair<int, std::string>> formats = {
 { V4L2_PIX_FMT_KONICA420, "KONICA420" },
 { V4L2_PIX_FMT_JPGL, "JPGL" },
 { V4L2_PIX_FMT_SE401, "SE401" },
-{ V4L2_PIX_FMT_S5C_UYVY_JPG, "S5C_UYVY_JPG" }
+//{ V4L2_PIX_FMT_S5C_UYVY_JPG, "S5C_UYVY_JPG" }
 };
 
 const std::vector<std::pair<int, int>> resolutions = {

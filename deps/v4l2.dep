@@ -1,0 +1,6 @@
+register({
+  id: 'libv4l2',
+  language: 'c++',
+  type: 'pkgconfig'
+});
+

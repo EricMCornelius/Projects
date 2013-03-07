@@ -1,0 +1,8 @@
+register({
+  id: 'boost',
+  language: 'c++',
+  type: 'external',
+  libs: ['boost_thread-mt', 'boost_system-mt'],
+  libdirs: ['/usr/lib'],
+  includedirs: ['/usr/include']
+});
