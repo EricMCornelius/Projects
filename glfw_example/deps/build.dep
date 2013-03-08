@@ -1,0 +1,18 @@
+register({
+  id: 'GlfwGit',
+  type: 'scm',
+  git: {
+    repo: 'https://github.com/elmindreda/glfw.git',
+    branch: 'master',
+    target: 'glfw'
+  }
+});
+
+register({
+  id: 'glfw3',
+  language: 'c++',
+  type: 'cmake',
+  deps: ['GlfwGit'],
+  base: env.base + '/glfw',
+  libs: ['glfw3']
+});

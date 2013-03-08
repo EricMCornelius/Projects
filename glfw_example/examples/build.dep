@@ -1,0 +1,7 @@
+register({
+  id: 'WaveExample',
+  language: 'c++',
+  compiler: 'gcc',
+  deps: ['glfw3'],
+  libs: ['GLU', 'X11', 'Xrandr', 'Xxf86vm', 'rt', 'm', 'GL']
+});
