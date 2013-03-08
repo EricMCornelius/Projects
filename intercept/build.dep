@@ -1,10 +1,8 @@
-env.linker = 'ld';
-
 register({
   id: 'InterceptExample',
   target: 'intercept',
   language: 'c++',
+  linker: 'ld',
   type: 'shared_lib',
-  libs: ['dl', 'rt'],
-  deps: ['boost']
+  libs: ['dl', 'rt']
 });

@@ -8,8 +8,12 @@ register({
   deps: ['opencv']
 });
 
+/*
+Could disable the opencv build and use pkg-config if the system supports
+
 register({
   id: 'opencv',
   language: 'c++',
   type: 'pkgconfig'
 });
+*/

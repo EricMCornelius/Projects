@@ -1,0 +1,19 @@
+register({
+  id: 'OpencvGit',
+  type: 'scm',
+  git: {
+    repo: 'https://github.com/Itseez/opencv.git',
+    branch: 'master',
+    target: 'opencv'
+  }
+});
+
+register({
+  id: 'opencv',
+  language: 'c++',
+  type: 'cmake',
+  deps: ['OpencvGit'],
+  base: env.base + '/opencv',
+  libs: ['opencv_calib3d', 'opencv_contrib', 'opencv_core', 'opencv_features2d', 'opencv_flann', 'opencv_highgui', 'opencv_imgproc', 'opencv_legacy',
+         'opencv_ml', 'opencv_objdetect', 'opencv_photo', 'opencv_stitching', 'opencv_ts', 'opencv_video', 'opencv_videostab']
+});
