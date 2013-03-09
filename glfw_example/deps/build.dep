@@ -1,4 +1,28 @@
 register({
+  id: 'x11',
+  language: 'c++',
+  type: 'pkgconfig'
+});
+
+register({
+  id: 'xrandr',
+  language: 'c++',
+  type: 'pkgconfig'
+});
+
+register({
+  id: 'xxf86vm',
+  language: 'c++',
+  type: 'pkgconfig'
+});
+
+register({
+  id: 'glu',
+  language: 'c++',
+  type: 'pkgconfig'
+});
+
+register({
   id: 'GlfwGit',
   type: 'scm',
   git: {
@@ -14,5 +38,6 @@ register({
   type: 'cmake',
   deps: ['GlfwGit'],
   base: env.base + '/glfw',
-  libs: ['glfw3']
+  libs: ['glfw3'],
+  deps: ['x11', 'xrandr', 'xxf86vm', 'glu']
 });
