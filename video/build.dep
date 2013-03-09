@@ -1,4 +1,4 @@
-env.compiler_flags = ['-std=c++11'];
+env.compiler_flags = ['-std=c++11', '-O2'];
 
 register({
   id: 'VideoCaptureExample',

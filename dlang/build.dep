@@ -1,0 +1,8 @@
+register({
+  id: 'DTest',
+  type: 'application',
+  language: 'd',
+  version: 'Test',
+  libs: ['dl'],
+  libdirs: ['/lib/x86_64-linux-gnu']
+});
