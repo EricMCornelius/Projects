@@ -1,0 +1,3 @@
+package_control
+sidebar enhancements
+soda theme dark
