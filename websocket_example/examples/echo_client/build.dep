@@ -1,0 +1,7 @@
+register({
+  id: 'websocket_echo_client',
+  type: 'application',
+  language: 'c++',
+  libs: ['pthread'],
+  deps: ['websocketpp', 'boost']
+});

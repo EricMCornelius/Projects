@@ -1,0 +1,19 @@
+register({
+  id: 'WebsocketppGit',
+  type: 'scm',
+  git: {
+    repo: 'https://github.com/zaphoyd/websocketpp.git',
+    branch: 'master',
+    target: 'websocketpp'
+  }
+});
+
+register({
+  id: 'websocketpp',
+  language: 'c++',
+  type: 'make',
+  buildcmd: 'make',
+  deps: ['WebsocketppGit'],
+  base: env.base + '/websocketpp',
+  libs: ['websocketpp']
+});
