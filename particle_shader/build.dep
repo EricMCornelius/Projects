@@ -1,0 +1,36 @@
+include('../glfw_example/deps/build.dep');
+
+register({
+  id: 'boost',
+  language: 'c++',
+  type: 'external',
+  libs: ['boost_system-mt']
+});
+
+register({
+  id: 'armadillo',
+  language: 'c++',
+  type: 'external',
+  libs: ['armadillo']
+});
+
+register({
+  id: 'lapack',
+  language: 'c++',
+  type: 'external',
+  libs: ['lapack'],
+  libdirs: ['/usr/lib/lapack']
+});
+
+register({
+  id: 'glew',
+  language: 'c++',
+  type: 'pkgconfig'
+});
+
+register({
+  id: 'ParticleShader',
+  language: 'c++',
+  compiler_flags: ['-std=c++11'],
+  deps: ['glfw3', 'glew', 'boost', 'armadillo', 'lapack']
+});

@@ -1,0 +1,48 @@
+#version 330
+#extension GL_EXT_geometry_shader4 : enable
+
+precision highp float;
+
+layout (points) in;
+layout (line_strip) out;
+layout (max_vertices = 20) out;
+
+in VertexData
+{
+    vec4 color;
+    vec3 velocity;
+    float time;
+} vertex [];
+
+out FragmentData
+{
+    vec4 color;
+} fragment;
+
+uniform mat4 mvpMatrix;
+
+void main(void)
+{
+    float dt = vertex[0].time / 20.0f;
+
+    vec3 lastVelocity = vertex[0].velocity;
+
+    for(int x = 0; x < 20; ++x)
+    {
+        float time = float(x) * dt;
+
+        vec4 position = gl_in[0].gl_Position;
+        position += vec4(lastVelocity * time, 1.0);
+        fragment.color = vertex[0].color;
+        fragment.color *= pow(clamp(1.0f - (vertex[0].time - time), 0.0f, 1.0f), 8.0);
+        fragment.color *= pow(clamp(1.0f - time, 0.0f, 1.0f), 2.0);
+        gl_Position = mvpMatrix * position;
+		EmitVertex();
+
+        lastVelocity[1] -= 15.0 * dt;
+
+        for(int i = 0; i < 3; ++i)
+                lastVelocity[i] -= 1.0 * (lastVelocity[i] * dt);
+    }
+    EndPrimitive;
+}

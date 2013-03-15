@@ -1,0 +1,13 @@
+#version 150
+
+in FragmentData
+{
+    vec4 color;
+} fragment;
+
+out vec4 ColorOut;
+
+void main (void)
+{   
+    ColorOut = fragment.color;
+}

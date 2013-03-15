@@ -1,0 +1,43 @@
+#version 330
+
+/*
+in VertexData
+{
+    vec3 vertex;
+    vec3 color;
+    vec3 velocity;
+    float start_time;
+} in_vertex;
+*/
+
+in vec3 vert_in;
+in vec3 color;
+in vec3 velocity;
+in float start_time;
+
+out VertexData
+{
+    vec4 color;
+    vec3 velocity;
+    float time;
+} vertex;
+ 
+uniform vec4 start_color;
+uniform float time;
+
+void main()
+{
+    vec4 vert = vec4(vert_in, 0.0f);
+    float t = time - start_time;
+    vertex.color = start_color;
+    vertex.velocity = velocity;
+    vertex.time = 0.0;
+
+    if(t >= 0.0)
+    {
+        vertex.time = t;
+        vertex.color = vec4(color, 1.0f);
+    }
+ 
+    gl_Position = vert;
+}
