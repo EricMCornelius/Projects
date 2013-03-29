@@ -3,7 +3,7 @@ register({
   type: 'scm',
   git: {
     repo: 'https://github.com/zaphoyd/websocketpp.git',
-    branch: 'master',
+    branch: 'experimental',
     target: 'websocketpp'
   }
 });
@@ -11,9 +11,8 @@ register({
 register({
   id: 'websocketpp',
   language: 'c++',
-  type: 'make',
-  buildcmd: 'make',
-  deps: ['WebsocketppGit'],
-  base: env.base + '/websocketpp',
-  libs: ['websocketpp']
+  type: 'external',
+  deps: ['WebsocketppGit', 'boost'],
+  includedirs: [env.base + '/websocketpp'],
+  base: env.base + '/websocketpp'
 });

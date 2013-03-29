@@ -3,5 +3,5 @@ register({
   type: 'application',
   language: 'c++',
   libs: ['pthread'],
-  deps: ['websocketpp', 'boost']
+  deps: ['websocketpp']
 });

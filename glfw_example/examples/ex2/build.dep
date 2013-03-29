@@ -1,0 +1,7 @@
+register({
+  id: 'SimpleExample',
+  language: 'c++',
+  compiler: 'gcc',
+  deps: ['glfw3'],
+  libs: ['rt', 'm']
+});

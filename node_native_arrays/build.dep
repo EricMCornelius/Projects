@@ -1,0 +1,22 @@
+register({
+  id: 'extension',
+  language: 'c++',
+  type: 'shared_lib',
+  compiler_flags: ['-std=c++11'],
+  libs: ['pthread', 'freetype', 'rt', 'm', 'GLEW'],
+  deps: ['glfw'],
+  defines: ['GLFW_EXPOSE_NATIVE_GLX', 'GLFW_EXPOSE_NATIVE_X11']
+});
+
+register({
+  id: 'run',
+  type: 'command',
+  commands: {
+    series: [{
+      cmd: 'LD_PRELOAD=' + env.base + '/lib/libextension.so /usr/local/bin/node',
+      sources: [env.base + '/lib/libextension.so'],
+      cwd: env.base,
+      action: 'run'
+    }]
+  }
+});

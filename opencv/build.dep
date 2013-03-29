@@ -3,7 +3,7 @@ register({
   type: 'scm',
   git: {
     repo: 'https://github.com/Itseez/opencv.git',
-    branch: 'master',
+    branch: '2.4',
     target: 'opencv'
   }
 });

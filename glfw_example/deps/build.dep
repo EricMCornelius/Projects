@@ -38,6 +38,6 @@ register({
   type: 'cmake',
   deps: ['GlfwGit'],
   base: env.base + '/glfw',
-  libs: ['glfw3'],
+  libs: ['glfw3', 'rt'],
   deps: ['x11', 'xrandr', 'xxf86vm', 'glu']
 });
