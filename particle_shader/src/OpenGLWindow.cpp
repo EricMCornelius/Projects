@@ -52,7 +52,7 @@ void OpenGLWindow::setCallbacks() {
 
   });
 
-  glfwSetCursorPosCallback(_impl, [](GLFWwindow*, int x, int y) {
+  glfwSetCursorPosCallback(_impl, [](GLFWwindow*, double x, double y) {
     std::cout << x << " " << y << std::endl;
   });
 

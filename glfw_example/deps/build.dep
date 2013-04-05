@@ -23,6 +23,13 @@ register({
 });
 
 register({
+  id: 'XInput',
+  language: 'c++',
+  type: 'external',
+  libs: ['Xi']
+});
+
+register({
   id: 'GlfwGit',
   type: 'scm',
   git: {
@@ -39,5 +46,5 @@ register({
   deps: ['GlfwGit'],
   base: env.base + '/glfw',
   libs: ['glfw3', 'rt'],
-  deps: ['x11', 'xrandr', 'xxf86vm', 'glu']
+  deps: ['x11', 'xrandr', 'xxf86vm', 'glu', 'XInput']
 });
