@@ -1,0 +1,45 @@
+register({
+  id: 'llvmGit',
+  type: 'scm',
+  git: {
+    repo: 'http://llvm.org/git/llvm.git',
+    branch: 'master',
+    target: 'llvm'
+  },
+  submodule: true
+});
+
+register({
+  id: 'ClangGit',
+  type: 'scm',
+  git: {
+    repo: 'http://llvm.org/git/clang.git',
+    branch: 'master',
+    target: 'llvm/tools/clang'
+  },
+  deps: ['llvmGit']
+});
+
+register({
+  id: 'CompilerRTGit',
+  type: 'scm',
+  git: {
+    repo: 'http://llvm.org/git/compiler-rt.git',
+    branch: 'master',
+    target: 'llvm/projects/compiler-rt'
+  },
+  deps: ['llvmGit']
+});
+
+register({
+  id: 'llvm',
+  language: 'c++',
+  type: 'cmake',
+  deps: ['llvmGit'],
+  defines: {
+    'CMAKE_EXE_LINKER_FLAGS': '-L/lib/x86_64-linux-gnu -ldl',
+    'CMAKE_VERBOSE_MAKEFILE': 'true'
+  },
+  base: env.base + '/llvm',
+  installdir: '/usr/local'
+});

@@ -15,8 +15,9 @@ register({
   type: 'cmake',
   deps: ['LdcGit'],
   defines: {
-    'CMAKE_EXE_LINKER_FLAGS': '-L/lib/x86_64-linux-gnu -ldl',
-    'CMAKE_VERBOSE_MAKEFILE': 'true'
+    'CMAKE_EXE_LINKER_FLAGS': '-L/lib/x86_64-linux-gnu -ldl'
+//    'CMAKE_VERBOSE_MAKEFILE': 'true'
   },
-  base: env.base + '/build'
+  base: env.base + '/build',
+  installdir: '/usr/local'
 });
