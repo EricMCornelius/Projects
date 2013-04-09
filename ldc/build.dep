@@ -1,9 +1,11 @@
+var branch = (env.build_type === 'dev') ? 'master' : 'release-0.10.0';
+
 register({
   id: 'LdcGit',
   type: 'scm',
   git: {
     repo: 'https://github.com/ldc-developers/ldc.git',
-    branch: 'master',
+    branch: branch,
     target: 'build'
   },
   submodule: true
@@ -15,8 +17,9 @@ register({
   type: 'cmake',
   deps: ['LdcGit'],
   defines: {
-    'CMAKE_EXE_LINKER_FLAGS': '-L/lib/x86_64-linux-gnu -ldl'
-//    'CMAKE_VERBOSE_MAKEFILE': 'true'
+    'CMAKE_EXE_LINKER_FLAGS': '-L/lib/x86_64-linux-gnu -ldl',
+    'CMAKE_VERBOSE_MAKEFILE': 'true',
+    'CMAKE_BUILD_TYPE': 'release'
   },
   base: env.base + '/build',
   installdir: '/usr/local'
