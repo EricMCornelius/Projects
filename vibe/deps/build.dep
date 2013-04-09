@@ -1,0 +1,19 @@
+register({
+  id: 'vibe.git',
+  type: 'scm',
+  git: {
+    repo: 'https://github.com/rejectedsoftware/vibe.d.git',
+    branch: 'master',
+    target: 'vibe'
+  }
+});
+
+register({
+  id: 'vibe',
+  type: 'static_lib',
+  language: 'd',
+  version: 'VibeLibeventDriver',
+  importdirs: ['source'],
+  sources: ['source/**/*.d'],
+  base: env.base + '/vibe'
+});

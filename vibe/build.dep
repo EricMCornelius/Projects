@@ -1,0 +1,12 @@
+register({
+  id: 'vibe_test',
+  type: 'application',
+  language: 'd',
+  importdirs: ['deps/vibe/source'],
+  stringimportdirs: ['views'],
+  srcdir: 'src',
+  libdirs: ['/lib64'],
+  libs: ['ssl', 'crypto', 'event'],
+  deps: ['vibe'],
+  linker_flags: ['-L--unresolved-symbols=ignore-in-object-files']
+});
