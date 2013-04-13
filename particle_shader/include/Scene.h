@@ -140,6 +140,35 @@ void Scene::render()
     static unsigned int startTimeBuffer = 0;
     static VertexArray vertexArray;
 
+    static bool initProgram = false;
+    if (!initProgram) {
+      fragShader = new FragmentShader("ConfettiFS.txt");
+      vertShader = new VertexShader("ConfettiVS.txt");
+      geoShader = new GeometryShader("ConfettiGS2.txt");
+
+      program = new Program();
+
+      glBindAttribLocation(*program, Program::VERTEX_ARRAY, "vertex");
+      glBindAttribLocation(*program, Program::COLOR_ARRAY, "color");
+      glBindAttribLocation(*program, Program::VELOCITY_ARRAY, "velocity");
+      glBindAttribLocation(*program, Program::START_TIME_ARRAY, "start_time");
+
+      glBindFragDataLocation(*program, GL_BACK, "ColorOut");
+
+      glAttachShader(*program, *vertShader);
+      glAttachShader(*program, *fragShader);
+      glAttachShader(*program, *geoShader);
+
+      program->link();
+      glUseProgram(*program);
+
+      float background[] = {0.0f, 0.0f, 0.0f, 0.0f};
+      program->setBackground(background);
+
+      program->setModelViewProjectionMatrix(theCamera.getMVP());
+      initProgram = true;
+    }
+
     static bool init = false;
     if(!init)
     {
@@ -169,6 +198,7 @@ void Scene::render()
 
         vertexArray.unbind();
 
+        /*
         fragShader = new FragmentShader("ConfettiFS.txt");
         vertShader = new VertexShader("ConfettiVS.txt");
         geoShader = new GeometryShader("ConfettiGS2.txt");
@@ -193,6 +223,7 @@ void Scene::render()
         program->setBackground(background);
 
         program->setModelViewProjectionMatrix(theCamera.getMVP());
+        */
 
         for (std::size_t i = 0; i < 50; ++i)
             appendBurst(100 * randFloat(1.0, 3.0), randFloat(-5.0, 5.0), randFloat(-5.0, 5.0), randFloat(-10.0, 10.0), randFloat(0.8, 2.0), 3.5 * randFloat());
