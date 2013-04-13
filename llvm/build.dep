@@ -1,9 +1,11 @@
+var branch = (env.build_type === 'dev') ? 'master' : 'release_32';
+
 register({
   id: 'llvmGit',
   type: 'scm',
   git: {
     repo: 'http://llvm.org/git/llvm.git',
-    branch: 'master',
+    branch: branch,
     target: 'llvm'
   },
   submodule: true
@@ -14,7 +16,7 @@ register({
   type: 'scm',
   git: {
     repo: 'http://llvm.org/git/clang.git',
-    branch: 'master',
+    branch: branch,
     target: 'llvm/tools/clang'
   },
   deps: ['llvmGit']
@@ -25,7 +27,7 @@ register({
   type: 'scm',
   git: {
     repo: 'http://llvm.org/git/compiler-rt.git',
-    branch: 'master',
+    branch: branch,
     target: 'llvm/projects/compiler-rt'
   },
   deps: ['llvmGit']
@@ -38,7 +40,8 @@ register({
   deps: ['llvmGit'],
   defines: {
     'CMAKE_EXE_LINKER_FLAGS': '-L/lib/x86_64-linux-gnu -ldl',
-    'CMAKE_VERBOSE_MAKEFILE': 'true'
+    'CMAKE_VERBOSE_MAKEFILE': 'true',
+    'CMAKE_BUILD_TYPE': 'release'
   },
   base: env.base + '/llvm',
   installdir: '/usr/local'
