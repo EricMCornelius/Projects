@@ -2,7 +2,7 @@ register({
   id: 'vibe_test',
   type: 'application',
   language: 'd',
-  importdirs: ['deps/vibe/source'],
+  importdirs: ['deps/vibe/import'],
   stringimportdirs: ['views'],
   srcdir: 'src',
   libdirs: ['/lib64'],

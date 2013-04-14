@@ -3,7 +3,7 @@ register({
   type: 'scm',
   git: {
     repo: 'https://github.com/rejectedsoftware/vibe.d.git',
-    branch: 'master',
+    branch: 'v0.7.14',
     target: 'vibe'
   }
 });
@@ -13,7 +13,8 @@ register({
   type: 'static_lib',
   language: 'd',
   version: 'VibeLibeventDriver',
-  importdirs: ['source'],
-  sources: ['source/**/*.d'],
+  importdirs: ['source', 'import'],
+  importdir: 'generated_imports',
+  srcdir: 'source',
   base: env.base + '/vibe'
 });
