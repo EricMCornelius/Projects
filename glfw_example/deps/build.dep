@@ -40,11 +40,12 @@ register({
 });
 
 register({
-  id: 'glfw3',
+  id: 'glfw',
   language: 'c++',
   type: 'cmake',
   deps: ['GlfwGit'],
+  defines: {BUILD_SHARED_LIBS: true},
   base: env.base + '/glfw',
-  libs: ['glfw3', 'rt'],
+  libs: ['glfw', 'rt'],
   deps: ['x11', 'xrandr', 'xxf86vm', 'glu', 'XInput']
 });

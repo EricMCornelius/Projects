@@ -142,9 +142,9 @@ void Scene::render()
 
     static bool initProgram = false;
     if (!initProgram) {
-      fragShader = new FragmentShader("ConfettiFS.txt");
-      vertShader = new VertexShader("ConfettiVS.txt");
-      geoShader = new GeometryShader("ConfettiGS2.txt");
+      fragShader = new FragmentShader("resources/ConfettiFS.txt");
+      vertShader = new VertexShader("resources/ConfettiVS.txt");
+      geoShader = new GeometryShader("resources/ConfettiGS2.txt");
 
       program = new Program();
 

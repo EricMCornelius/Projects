@@ -9,6 +9,8 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+try {
+
   OpenGLContext ctx;
   Renderer renderer;
   OpenGLWindow window(ctx, renderer, 640, 640, "Sample Window");
@@ -16,4 +18,8 @@ int main(int argc, char *argv[])
   scene.appendBurst(100, 0, 0, 0, 2.0, 0.0);
   renderer.addObject(&scene);
   window.start();
+
+} catch(std::exception& e) {
+  std::cerr << e.what() << std::endl;
+}
 }

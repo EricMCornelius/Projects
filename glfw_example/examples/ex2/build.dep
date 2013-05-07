@@ -2,6 +2,6 @@ register({
   id: 'SimpleExample',
   language: 'c++',
   compiler: 'gcc',
-  deps: ['glfw3'],
+  deps: ['glfw'],
   libs: ['rt', 'm']
 });

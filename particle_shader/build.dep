@@ -4,7 +4,7 @@ register({
   id: 'boost',
   language: 'c++',
   type: 'external',
-  libs: ['boost_system-mt']
+  libs: ['boost_system']
 });
 
 register({
@@ -32,5 +32,5 @@ register({
   id: 'ParticleShader',
   language: 'c++',
   compiler_flags: ['-std=c++11'],
-  deps: ['glfw3', 'glew', 'boost', 'armadillo', 'lapack']
+  deps: ['glfw', 'glew', 'boost', 'armadillo', 'lapack']
 });
