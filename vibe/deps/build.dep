@@ -12,6 +12,38 @@ register({
 });
 
 register({
+  id: 'libevent.git',
+  type: 'scm',
+  git: {
+    repo: 'https://github.com/D-Programming-Deimos/libevent.git',
+    target: 'deimos/libevent2'
+  }
+});
+
+register({
+  id: 'openssl.git',
+  type: 'scm',
+  git: {
+    repo: 'https://github.com/D-Programming-Deimos/openssl.git',
+    target: 'deimos/openssl'
+  }
+});
+
+register({
+  id: 'deimos.libevent2',
+  type: 'external',
+  language: 'd',
+  importdirs: ['deimos/libevent2']
+});
+
+register({
+  id: 'deimos.openssl',
+  type: 'external',
+  language: 'd',
+  importdirs: ['deimos/openssl']
+});
+
+register({
   id: 'vibe',
   type: 'static_lib',
   language: 'd',
@@ -19,5 +51,6 @@ register({
   importdirs: ['source', 'import'],
   importdir: 'generated_imports',
   srcdir: 'source',
-  base: env.base + '/vibe'
+  base: env.base + '/vibe',
+  deps: ['deimos.libevent2', 'deimos.openssl']
 });

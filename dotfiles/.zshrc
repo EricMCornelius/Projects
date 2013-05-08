@@ -103,3 +103,4 @@ PS1="%{$fg[red]%}%n%{$reset_color%}@%{$fg[blue]%}%m %{$fg[yellow]%}%~ %{$reset_c
 # sublime alias
 alias edit='sublime &'
 alias nano='nano -c'
+alias ls='ls --color'
