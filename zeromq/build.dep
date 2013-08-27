@@ -1,0 +1,32 @@
+var path = require('path');
+
+register({
+  id: 'zmq_git',
+  type: 'scm',
+  git: {
+    repo: 'https://github.com/zeromq/zeromq3-x.git',
+    tag: 'v3.2.3',
+    target: 'build'
+  },
+  submodule: false
+});
+
+register({
+  id: 'zmq_configure',
+  type: 'command',
+  base: 'build',
+  commands: {
+    series: [
+      {cmd: './autogen.sh', cwd: 'build', target: 'dummy.txt'},
+      {cmd: './configure', cwd: 'build', target: 'dummy.txt'} 
+    ]
+  }
+});
+
+register({
+  id: 'zmq_build',
+  deps: ['zmq_configure'],
+  type: 'make',
+  base: 'build',
+  installdir: '/usr/local'
+});
