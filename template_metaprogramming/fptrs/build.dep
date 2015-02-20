@@ -1,0 +1,5 @@
+register({
+  id: 'fptrs',
+  type: 'application',
+  language: 'c++'
+});

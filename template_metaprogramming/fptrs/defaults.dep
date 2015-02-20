@@ -1,0 +1,1 @@
+env.compiler_flags = ['-std=c++11']
