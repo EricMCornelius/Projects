@@ -1,0 +1,5 @@
+register({
+  id: 'test',
+  type: 'test',
+  language: 'c++'
+});
