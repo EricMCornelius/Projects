@@ -1,0 +1,7 @@
+register({
+  id: 'azmq',
+  type: 'external',
+  language: 'c++',
+  includedirs: ['azmq'],
+  libs: ['zmq']
+});

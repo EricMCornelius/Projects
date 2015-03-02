@@ -1,0 +1,15 @@
+register({
+  id: 'server',
+  type: 'application',
+  language: 'c++',
+  sources: ['src/server.cpp'],
+  deps: ['boost', 'azmq']
+});
+
+register({
+  id: 'client',
+  type: 'application',
+  language: 'c++',
+  sources: ['src/client.cpp'],
+  deps: ['boost', 'azmq']
+});

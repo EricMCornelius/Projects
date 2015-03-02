@@ -1,0 +1,30 @@
+var clang = true;
+var coverage = false;
+var libcpp = true;
+var opt = '-O2';
+
+if (clang) {
+  // allow multiple definitions to work around llvm coverage bug...
+  env.compiler_flags = ['-std=c++14', '-fconstexpr-depth=512', opt, '-g', '-pthread'];
+  env.linker_flags = ['-lpthread', '-lrt', '-Wl,--allow-multiple-definition'];
+  env.lib_type = 'shared_lib';
+  env.compiler = 'clang++-3.6'
+
+  if (coverage) {
+    var cov_flags = ['-fprofile-instr-generate', '-fcoverage-mapping'];
+    env.compiler_flags = env.compiler_flags.concat(cov_flags);
+    env.linker_flags = env.linker_flags.concat(cov_flags);
+  }
+
+  if (libcpp) {
+    env.compiler_flags.push('-stdlib=libc++');
+    env.linker_flags.push('-stdlib=libc++');
+    env.linker_flags.push('-lc++abi');
+  }
+}
+else {
+  env.compiler_flags = ['-std=c++1y', '-fconstexpr-depth=8192', opt, '-g'];
+  env.lib_type = 'static_lib';
+  env.compiler = 'g++-4.9';
+}
+

@@ -1,0 +1,7 @@
+register({
+  id: 'boost',
+  type: 'external',
+  language: 'c++',
+  includedirs: ['/usr/include'],
+  libs: ['boost_system', 'boost_regex']
+});
