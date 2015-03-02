@@ -1,0 +1,13 @@
+env.compiler = 'clang-3.6';
+env.compiler_flags = ['-O2', '-g'];
+env.linker_flags = [];
+
+register({
+  id: 'lz4',
+  type: 'static_lib',
+  language: 'c++',
+  incdir: 'lib',
+  srcdir: 'lib',
+  libdir: 'output',
+  base: 'lz4'
+});
