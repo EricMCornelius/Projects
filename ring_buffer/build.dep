@@ -1,0 +1,22 @@
+register({
+  id: 'test',
+  type: 'application',
+  language: 'c++',
+  sources: ['src/ring_buffer.cpp']
+});
+
+register({
+  id: 'compress',
+  type: 'application',
+  language: 'c++',
+  sources: ['src/compress.cpp'],
+  deps: ['lz4']
+});
+
+register({
+  id: 'use_dict',
+  type: 'application',
+  language: 'c++',
+  sources: ['src/use_dict.cpp'],
+  deps: ['lz4']
+});
