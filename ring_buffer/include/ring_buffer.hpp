@@ -1,20 +1,19 @@
+#pragma once
+
 #define BOOST_CB_DISABLE_DEBUG 1
 
-#include <vector>
+#include <segment_cache.hpp>
+
 #include <string>
-#include <iterator>
+#include <unordered_map>
+#include <array>
 
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/interprocess/containers/string.hpp>
-#include <boost/interprocess/containers/vector.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-
 #include <boost/circular_buffer.hpp>
 
-#include <unordered_map>
-
-template <std::size_t page_size = 4096>
+template <std::size_t block_size = 4096>
 struct ring_buffer_impl {
   struct metadata {
     uint64_t id;
@@ -22,7 +21,7 @@ struct ring_buffer_impl {
     uint32_t size;
   };
 
-  typedef std::array<uint8_t, page_size> data;
+  typedef std::array<uint8_t, block_size> data;
 
   struct message {
     uint8_t* ptr;
@@ -58,25 +57,21 @@ struct ring_buffer_impl {
     return range_adaptor_impl<T1, T2>(p);
   }
 
-  ring_buffer_impl(const std::string& filename, std::size_t num_elements = 1024) {
+  ring_buffer_impl(const std::string& name, std::size_t num_elements = 1024) {
     using namespace boost;
     using namespace boost::interprocess;
 
-    static std::unordered_map<std::string, std::unique_ptr<managed_mapped_file>> file_cache;
-    auto lookup = file_cache.find(filename);
-    if (lookup == std::end(file_cache)) {
-      auto buffer_space = (sizeof(metadata) + page_size) * num_elements + sizeof(metadata_buffer) + sizeof(data_buffer);
-      auto segment_size = (ceil(buffer_space / mapped_region::get_page_size()) + 1) * mapped_region::get_page_size();
-      lookup = file_cache.insert(lookup, std::make_pair(filename, std::make_unique<managed_mapped_file>(open_or_create, filename.c_str(), segment_size)));
-    }
+    auto buffer_space = (sizeof(metadata) + block_size) * num_elements + sizeof(metadata_buffer) + sizeof(data_buffer);
+    auto segment_size = (ceil(buffer_space / mapped_region::get_page_size()) + 1) * mapped_region::get_page_size();
+    auto& segment = segment_cache::global().get(name, segment_size);
 
-    metadata_allocator metadata_alloc(lookup->second->get_segment_manager());
-    _metadata = lookup->second->find_or_construct<metadata_buffer>("metadata")(num_elements, metadata_alloc);
+    metadata_allocator metadata_alloc(segment->get_segment_manager());
+    _metadata = segment->find_or_construct<metadata_buffer>("metadata")(num_elements, metadata_alloc);
     if (!_metadata)
       throw std::runtime_error("could not allocate metadata buffer");
 
-    data_allocator data_alloc(lookup->second->get_segment_manager());
-    _data = lookup->second->find_or_construct<data_buffer>("data")(num_elements * page_size, data_alloc);
+    data_allocator data_alloc(segment->get_segment_manager());
+    _data = segment->find_or_construct<data_buffer>("data")(num_elements * block_size, data_alloc);
     if (!_data)
       throw std::runtime_error("could not allocate data buffer");
 
